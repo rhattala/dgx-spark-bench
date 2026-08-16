@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing — Meridian</title>
+<style>
+  :root{
+    --bg:#f4f2ec;
+    --bg-2:#eae6db;
+    --surface:#ffffff;
+    --surface-2:#f7f5ef;
+    --ink:#191712;
+    --ink-soft:#4c483f;
+    --muted:#8a8578;
+    --line:#e4dfd2;
+    --line-strong:#d3ccba;
+    --accent:#1f6f5b;
+    --accent-ink:#ffffff;
+    --accent-soft:#e3efe9;
+    --gold:#b8862f;
+    --gold-soft:#f4e9d2;
+    --shadow:0 1px 2px rgba(25,23,18,.05), 0 18px 40px -22px rgba(25,23,18,.35);
+    --shadow-lg:0 2px 4px rgba(25,23,18,.06), 0 30px 60px -26px rgba(25,23,18,.45);
+    --r:16px;
+    --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1113;
+      --bg-2:#14171a;
+      --surface:#191d21;
+      --surface-2:#1f2429;
+      --ink:#f2efe8;
+      --ink-soft:#c4c0b6;
+      --muted:#8b877d;
+      --line:#2a2f34;
+      --line-strong:#3a4046;
+      --accent:#37b79a;
+      --accent-ink:#082019;
+      --accent-soft:#12302a;
+      --gold:#e0b45c;
+      --gold-soft:#2a2416;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 20px 44px -24px rgba(0,0,0,.75);
+      --shadow-lg:0 2px 4px rgba(0,0,0,.5), 0 34px 64px -28px rgba(0,0,0,.85);
+    }
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:var(--font-sans);
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+  .brand .mark{
+    width:26px;height:26px;border-radius:8px;
+    background:var(--accent);color:var(--accent-ink);
+    display:grid;place-items:center;font-size:14px;font-weight:800;
+  }
+  .nav{display:flex;align-items:center;gap:22px}
+  .nav a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500}
+  .nav a:hover{color:var(--ink)}
+  .nav .signin{color:var(--ink);border:1px solid var(--line-strong);padding:7px 14px;border-radius:9px}
+  @media (max-width:560px){ .nav a:not(.signin){display:none} }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:clamp(40px,7vw,84px) 0 clamp(28px,4vw,44px)}
+  .eyebrow{
+    font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent);display:inline-flex;align-items:center;gap:9px;margin:0 0 18px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--accent);display:inline-block}
+  .hero h1{
+    font-size:clamp(2.1rem,6.4vw,3.6rem);line-height:1.02;letter-spacing:-.03em;
+    font-weight:800;margin:0 0 16px;max-width:15ch;
+  }
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{max-width:46ch;color:var(--ink-soft);font-size:clamp(1rem,2.4vw,1.12rem);margin:0}
+
+  /* ---------- Billing toggle ---------- */
+  .billing{display:flex;align-items:center;gap:14px;margin:30px 0 6px;flex-wrap:wrap}
+  .seg{
+    display:inline-flex;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:999px;padding:4px;gap:4px;
+  }
+  .seg button{
+    border:0;background:transparent;color:var(--ink-soft);cursor:pointer;
+    font:inherit;font-weight:600;font-size:14px;padding:8px 16px;border-radius:999px;
+    transition:color .25s,background .25s;
+  }
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  .save{
+    font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.02em;
+    color:var(--gold);background:var(--gold-soft);padding:5px 10px;border-radius:999px;
+  }
+
+  /* ---------- Cards ---------- */
+  .cards{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:clamp(14px,2vw,22px);align-items:stretch;
+    padding:26px 0 clamp(40px,6vw,72px);
+  }
+  .card{
+    position:relative;display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:26px 24px;box-shadow:var(--shadow);
+    transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s,border-color .35s;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--line-strong)}
+  .card.featured{
+    border-color:var(--accent);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface));
+    box-shadow:var(--shadow-lg);
+  }
+  @media (min-width:861px){
+    .card.featured{transform:translateY(-14px)}
+    .card.featured:hover{transform:translateY(-18px)}
+  }
+  .badge{
+    position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    background:var(--accent);color:var(--accent-ink);
+    font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    padding:6px 14px;border-radius:999px;white-space:nowrap;box-shadow:var(--shadow);
+  }
+  .plan{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1.15rem;letter-spacing:-.01em}
+  .plan .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+  .card.featured .plan .dot{background:var(--accent)}
+  .tagline{color:var(--muted);font-size:.92rem;margin:6px 0 20px;min-height:2.6em}
+
+  .price{display:flex;align-items:flex-start;gap:2px;font-family:var(--font-mono)}
+  .cur{font-size:1.35rem;font-weight:600;color:var(--ink-soft);margin-top:.35em}
+  .amount{font-size:clamp(2.6rem,7vw,3.1rem);font-weight:800;letter-spacing:-.04em;line-height:1}
+  .per{align-self:flex-end;color:var(--muted);font-size:.9rem;margin-bottom:.35em}
+  .price.flip .amount{animation:flip .4s ease}
+  @keyframes flip{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+
+  .billnote{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin:8px 0 22px;min-height:1em}
+
+  .cta{
+    width:100%;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:.98rem;
+    padding:13px 16px;border-radius:11px;letter-spacing:-.01em;
+    background:var(--surface-2);color:var(--ink);border:1px solid var(--line-strong);
+    transition:transform .2s,box-shadow .25s,background .25s,color .25s;
+  }
+  .cta:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .cta:active{transform:translateY(0)}
+  .card.featured .cta{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  .card.featured .cta:hover{box-shadow:0 12px 26px -12px var(--accent)}
+
+  .feats{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:13px}
+  .feats li{display:flex;gap:11px;align-items:flex-start;font-size:.94rem;color:var(--ink-soft)}
+  .feats .ic{
+    flex:none;width:20px;height:20px;border-radius:6px;margin-top:1px;
+    display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);
+  }
+  .feats .ic svg{width:12px;height:12px}
+
+  /* ---------- Comparison ---------- */
+  .compare{padding:clamp(30px,5vw,54px) 0}
+  .compare h2{font-size:clamp(1.5rem,4vw,2rem);letter-spacing:-.02em;margin:0 0 6px;font-weight:800}
+  .compare .sub{color:var(--muted);margin:0 0 24px;font-size:.98rem}
+  .tablewrap{
+    border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+    background:var(--surface);box-shadow:var(--shadow);
+  }
+  .tablescroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;min-width:560px}
+  th,td{padding:15px 18px;text-align:left;font-size:.94rem;border-bottom:1px solid var(--line)}
+  thead th{
+    position:sticky;top:64px;background:var(--surface);z-index:2;
+    font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  }
+  thead th.hl{color:var(--accent)}
+  tbody th{font-weight:600;color:var(--ink)}
+  td{color:var(--ink-soft);font-family:var(--font-mono);font-size:.9rem}
+  td.hl{background:color-mix(in srgb,var(--accent) 6%,var(--surface));color:var(--ink);font-weight:600}
+  tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover th,tbody tr:hover td{background:var(--surface-2)}
+  tbody tr:hover td.hl{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+  .yes{color:var(--accent);font-weight:700}
+
+  /* ---------- FAQ ---------- */
+  .faq{padding:clamp(30px,5vw,54px) 0}
+  .faq h2{font-size:clamp(1.5rem,4vw,2rem);letter-spacing:-.02em;margin:0 0 22px;font-weight:800}
+  .qa{border-top:1px solid var(--line)}
+  .qa:last-child{border-bottom:1px solid var(--line)}
+  .qa button{
+    width:100%;background:transparent;border:0;cursor:pointer;font:inherit;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:20px 4px;text-align:left;color:var(--ink);font-weight:600;font-size:1.02rem;letter-spacing:-.01em;
+  }
+  .qa .plus{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line-strong);
+    display:grid;place-items:center;color:var(--ink-soft);transition:transform .3s,background .3s,color .3s}
+  .qa .plus svg{width:13px;height:13px}
+  .qa.open .plus{transform:rotate(45deg);background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  .qa .panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+  .qa.open .panel{grid-template-rows:1fr}
+  .qa .panel>div{overflow:hidden}
+  .qa .panel p{margin:0 0 20px;color:var(--ink-soft);max-width:62ch;padding-right:40px}
+
+  /* ---------- Footer ---------- */
+  .foot{border-top:1px solid var(--line);padding:34px 0;margin-top:20px}
+  .foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .foot small{color:var(--muted);font-family:var(--font-mono);font-size:12px}
+
+  /* ---------- Reveal ---------- */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);
+    background:var(--ink);color:var(--bg);padding:13px 20px;border-radius:12px;
+    font-size:.92rem;font-weight:600;box-shadow:var(--shadow-lg);z-index:50;
+    display:flex;align-items:center;gap:10px;transition:transform .4s cubic-bezier(.2,.9,.3,1.2);
+    max-width:calc(100vw - 32px);
+  }
+  .toast.show{transform:translate(-50%,0)}
+  .toast .tdot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:860px){
+    .cards{grid-template-columns:1fr;max-width:460px;margin:0 auto}
+    .card.featured{transform:none}
+    .card.featured:hover{transform:translateY(-4px)}
+    .tagline{min-height:0}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand"><span class="mark">M</span> Meridian</div>
+      <nav class="nav">
+        <a href="#">Product</a>
+        <a href="#">Docs</a>
+        <a href="#">Changelog</a>
+        <a href="#" class="signin">Sign in</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">Pricing</p>
+      <h1>Simple pricing that <em>scales</em> with you.</h1>
+      <p>Start free, upgrade when you're ready. Every plan includes unlimited projects, priority support, and no hidden fees.</p>
+
+      <div class="billing">
+        <div class="seg" role="group" aria-label="Billing period">
+          <button type="button" data-period="monthly" aria-pressed="true">Monthly</button>
+          <button type="button" data-period="yearly" aria-pressed="false">Yearly</button>
+        </div>
+        <span class="save">Save 20% yearly</span>
+      </div>
+    </section>
+
+    <section class="cards wrap" aria-label="Pricing plans">
+      <!-- Starter -->
+      <article class="card reveal">
+        <div class="plan"><span class="dot"></span> Starter</div>
+        <p class="tagline">For individuals and side projects just getting off the ground.</p>
+        <div class="price">
+          <span class="cur">$</span>
+          <span class="amount" data-monthly="9" data-yearly="7">9</span>
+          <span class="per">/mo</span>
+        </div>
+        <p class="billnote" data-note="starter">Billed monthly</p>
+        <button class="cta" data-plan="Starter">Start free trial</button>
+        <ul class="feats">
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> 3 active projects</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> 5 GB storage</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Community support</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Basic analytics</li>
+        </ul>
+      </article>
+
+      <!-- Pro -->
+      <article class="card featured reveal">
+        <span class="badge">Most popular</span>
+        <div class="plan"><span class="dot"></span> Pro</div>
+        <p class="tagline">For growing teams that need power, speed, and room to breathe.</p>
+        <div class="price">
+          <span class="cur">$</span>
+          <span class="amount" data-monthly="29" data-yearly="23">29</span>
+          <span class="per">/mo</span>
+        </div>
+        <p class="billnote" data-note="pro">Billed monthly</p>
+        <button class="cta" data-plan="Pro">Get started</button>
+        <ul class="feats">
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Unlimited projects</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> 100 GB storage</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Priority email support</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Advanced analytics</li>
+        </ul>
+      </article>
+
+      <!-- Enterprise -->
+      <article class="card reveal">
+        <div class="plan"><span class="dot"></span> Enterprise</div>
+        <p class="tagline">For organizations with advanced security and compliance needs.</p>
+        <div class="price">
+          <span class="cur">$</span>
+          <span class="amount" data-monthly="99" data-yearly="79">99</span>
+          <span class="per">/mo</span>
+        </div>
+        <p class="billnote" data-note="enterprise">Billed monthly</p>
+        <button class="cta" data-plan="Enterprise">Contact sales</button>
+        <ul class="feats">
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Unlimited everything</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> 1 TB storage</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> 24/7 dedicated support</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> SSO &amp; audit logs</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="compare wrap reveal">
+      <h2>Compare every detail</h2>
+      <p class="sub">The full breakdown, side by side.</p>
+      <div class="tablewrap">
+        <div class="tablescroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col">Starter</th>
+                <th scope="col" class="hl">Pro</th>
+                <th scope="col">Enterprise</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Projects</th><td>3</td><td class="hl">Unlimited</td><td>Unlimited</td></tr>
+              <tr><th scope="row">Storage</th><td>5 GB</td><td class="hl">100 GB</td><td>1 TB</td></tr>
+              <tr><th scope="row">Team members</th><td>1</td><td class="hl">10</td><td>Unlimited</td></tr>
+              <tr><th scope="row">API access</th><td>—</td><td class="hl">Yes</td><td>Yes</td></tr>
+              <tr><th scope="row">Custom domains</th><td>—</td><td class="hl">Yes</td><td>Yes</td></tr>
+              <tr><th scope="row">Priority support</th><td>—</td><td class="hl">Yes</td><td>24/7</td></tr>
+              <tr><th scope="row">SSO &amp; audit logs</th><td>—</td><td class="hl">—</td><td class="yes">Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq wrap reveal">
+      <h2>Questions, answered</h2>
+      <div class="qa">
+        <button aria-expanded="false"><span>Can I switch plans later?</span><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="panel"><div><p>Absolutely. Upgrade or downgrade at any time from your dashboard. Changes are prorated, so you only ever pay for what you actually use.</p></div></div>
+      </div>
+      <div class="qa">
+        <button aria-expanded="false"><span>Is there a free trial?</span><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="panel"><div><p>Every plan starts with a 14-day free trial — no credit card required. You'll get a reminder before it ends, and nothing is charged automatically.</p></div></div>
+      </div>
+      <div class="qa">
+        <button aria-expanded="false"><span>What payment methods do you accept?</span><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="panel"><div><p>All major credit and debit cards, plus PayPal. Enterprise customers can also pay by invoice with NET-30 terms.</p></div></div>
+      </div>
+      <div class="qa">
+        <button aria-expanded="false"><span>Do you offer refunds?</span><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="panel"><div><p>Yes — a 30-day money-back guarantee on all plans, no questions asked. If it's not the right fit, we'll make it right.</p></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="brand"><span class="mark">M</span> Meridian</div>
+      <small>© 2024 Meridian Labs · Prices in USD</small>
+    </div>
+  </footer>
+
+  <div class="toast" role="status" aria-live="polite"><span class="tdot"></span><span id="toastMsg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- Billing toggle ---- */
+  var segButtons = document.querySelectorAll(".seg button");
+  var amounts = document.querySelectorAll(".amount");
+  var notes = document.querySelectorAll(".billnote");
+
+  function setPeriod(period){
+    segButtons.forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.period === period ? "true" : "false");
+    });
+    amounts.forEach(function(a){
+      var val = a.dataset[period];
+      if(a.textContent !== val){
+        a.textContent = val;
+        if(!reduce){
+          var p = a.closest(".price");
+          p.classList.remove("flip");
+          void p.offsetWidth;
+          p.classList.add("flip");
+        }
+      }
+    });
+    notes.forEach(function(n){
+      n.textContent = period === "yearly"
+        ? "Billed yearly · save 20%"
+        : "Billed monthly";
+    });
+  }
+  segButtons.forEach(function(b){
+    b.addEventListener("click", function(){ setPeriod(b.dataset.period); });
+  });
+
+  /* ---- CTA toast ---- */
+  var toast = document.querySelector(".toast");
+  var toastMsg = document.getElementById("toastMsg");
+  var toastTimer;
+  function showToast(msg){
+    toastMsg.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 3200);
+  }
+  document.querySelectorAll(".cta").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var plan = btn.dataset.plan;
+      var period = document.querySelector('.seg button[aria-pressed="true"]').dataset.period;
+      showToast(plan + " plan selected · " + (period === "yearly" ? "billed yearly" : "billed monthly"));
+    });
+  });
+
+  /* ---- FAQ accordion ---- */
+  document.querySelectorAll(".qa button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var item = btn.closest(".qa");
+      var open = item.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+
+  /* ---- Scroll reveal ---- */
+  var reveals = document.querySelectorAll(".reveal");
+  if(reduce || !("IntersectionObserver" in window)){
+    reveals.forEach(function(el){ el.classList.add("in"); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    reveals.forEach(function(el, i){
+      el.style.transitionDelay = (i % 3) * 90 + "ms";
+      io.observe(el);
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Board</title>
+<style>
+  :root{
+    --bg:#e9edf3;
+    --panel:#ffffff;
+    --ink:#1b2330;
+    --ink-soft:#5a6474;
+    --line:#e4e8ef;
+    --accent:#ff5a3c;
+    --accent-ink:#fff;
+    --accent-soft:#ffece6;
+    --done:#12a877;
+    --done-soft:#e2f6ee;
+    --focus:#2f6bff;
+    --shadow:0 1px 2px rgba(20,30,50,.05), 0 18px 40px -20px rgba(20,30,50,.35);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.9), rgba(255,255,255,0) 55%),
+      radial-gradient(60% 50% at 85% 15%, rgba(255,90,60,.06), transparent 60%),
+      radial-gradient(60% 50% at 10% 90%, rgba(18,168,119,.06), transparent 60%);
+  }
+  .board{
+    position:relative;z-index:1;
+    max-width:560px;margin:0 auto;
+    padding:clamp(20px,5vw,48px) 16px 64px;
+  }
+
+  /* Header */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
+  .head h1{
+    margin:0;font-size:clamp(1.9rem,7vw,2.6rem);font-weight:800;letter-spacing:-.03em;line-height:1;
+  }
+  .head h1 .mark{color:var(--accent)}
+  .head .sub{margin:6px 0 0;font-size:.9rem;color:var(--ink-soft)}
+  .stat{
+    text-align:right;flex:0 0 auto;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:8px 14px;box-shadow:var(--shadow);
+  }
+  .stat .num{font-size:1.7rem;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft);font-weight:700}
+
+  /* Card */
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+
+  /* Add form */
+  .add{display:flex;gap:8px;padding:14px;border-bottom:1px solid var(--line);background:linear-gradient(#fff,#fbfcfe)}
+  .add input{
+    flex:1;min-width:0;font:inherit;font-size:1rem;color:var(--ink);
+    padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .add input::placeholder{color:#9aa4b2}
+  .add input:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 3px rgba(47,107,255,.18)}
+  .add button{
+    flex:0 0 auto;font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;
+    color:var(--accent-ink);background:var(--accent);border:none;border-radius:10px;
+    padding:0 20px;min-height:46px;letter-spacing:.01em;
+    transition:transform .12s, box-shadow .15s, background .15s;
+    box-shadow:0 6px 16px -8px rgba(255,90,60,.7);
+  }
+  .add button:hover{transform:translateY(-1px);box-shadow:0 10px 22px -8px rgba(255,90,60,.75)}
+  .add button:active{transform:translateY(0)}
+
+  /* Toolbar */
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;flex-wrap:wrap}
+  .filters{display:flex;gap:6px}
+  .filters button{
+    font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;
+    color:var(--ink-soft);background:transparent;border:1px solid transparent;
+    padding:7px 13px;border-radius:999px;transition:all .15s;
+  }
+  .filters button:hover{background:var(--accent-soft);color:var(--accent)}
+  .filters button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .count{font-size:.85rem;color:var(--ink-soft);font-weight:600;font-variant-numeric:tabular-nums}
+  .count b{color:var(--ink)}
+
+  /* List */
+  .list{list-style:none;margin:0;padding:6px 8px 8px;max-height:52vh;overflow:auto}
+  .task{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 10px;border-radius:10px;
+    animation:pop .28s cubic-bezier(.2,.8,.3,1);
+    transition:background .15s;
+  }
+  .task:hover{background:#f6f8fb}
+  .task + .task{border-top:1px solid #f1f3f7}
+  @keyframes pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+  .check{
+    flex:0 0 auto;width:26px;height:26px;border-radius:8px;cursor:pointer;
+    border:2px solid #cfd6e0;background:#fff;color:transparent;
+    display:grid;place-items:center;transition:all .15s;
+  }
+  .check:hover{border-color:var(--done);background:var(--done-soft)}
+  .check svg{width:15px;height:15px;opacity:0;transform:scale(.4);transition:all .18s}
+  .task.done .check{background:var(--done);border-color:var(--done)}
+  .task.done .check svg{opacity:1;transform:scale(1);color:#fff}
+
+  .label{flex:1;min-width:0;font-size:1rem;word-break:break-word;transition:color .2s}
+  .task.done .label{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:#b9c1cd}
+
+  .del{
+    flex:0 0 auto;width:34px;height:34px;border-radius:9px;cursor:pointer;
+    border:none;background:transparent;color:#b4bcc9;font-size:1.35rem;line-height:1;
+    display:grid;place-items:center;transition:all .15s;
+  }
+  .del:hover{background:#fdecec;color:var(--accent)}
+
+  /* Empty */
+  .empty{padding:44px 20px 48px;text-align:center}
+  .empty .emoji{font-size:2.6rem;line-height:1;margin-bottom:10px}
+  .empty h2{margin:0 0 6px;font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+  .empty p{margin:0;color:var(--ink-soft);font-size:.95rem}
+
+  /* Focus visibility */
+  .check:focus-visible,.del:focus-visible,.add button:focus-visible,.filters button:focus-visible{
+    outline:3px solid var(--focus);outline-offset:2px;
+  }
+
+  @media (max-width:360px){
+    .head{flex-direction:column;align-items:flex-start;gap:12px}
+    .stat{text-align:left}
+    .add button{padding:0 16px}
+  }
+</style>
+</head>
+<body>
+  <main class="board">
+    <header class="head">
+      <div>
+        <h1>Task<span class="mark">board</span></h1>
+        <p class="sub">Capture it, tick it off, move on.</p>
+      </div>
+      <div class="stat" aria-hidden="true">
+        <div class="num" id="statNum">0</div>
+        <div class="lbl">to go</div>
+      </div>
+    </header>
+
+    <section class="card" aria-label="Task board">
+      <form class="add" id="addForm" autocomplete="off">
+        <input id="taskInput" type="text" placeholder="What needs doing?" aria-label="New task" maxlength="200">
+        <button type="submit">Add</button>
+      </form>
+
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filter tasks">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="active" aria-pressed="false">Active</button>
+          <button type="button" data-filter="completed" aria-pressed="false">Completed</button>
+        </div>
+        <div class="count" id="count" aria-live="polite"></div>
+      </div>
+
+      <ul class="list" id="list"></ul>
+      <div class="empty" id="empty" hidden></div>
+    </section>
+  </main>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "taskboard.v1";
+  var listEl = document.getElementById("list");
+  var emptyEl = document.getElementById("empty");
+  var countEl = document.getElementById("count");
+  var statNum = document.getElementById("statNum");
+  var form = document.getElementById("addForm");
+  var input = document.getElementById("taskInput");
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll(".filters button"));
+
+  var tasks = load();
+  var filter = "all";
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      var data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    }catch(e){ return []; }
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(tasks)); }catch(e){}
+  }
+  function uid(){
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function visible(){
+    if(filter === "active") return tasks.filter(function(t){ return !t.done; });
+    if(filter === "completed") return tasks.filter(function(t){ return t.done; });
+    return tasks;
+  }
+
+  function render(){
+    var shown = visible();
+    var active = tasks.filter(function(t){ return !t.done; }).length;
+    var total = tasks.length;
+
+    statNum.textContent = active;
+    countEl.innerHTML = "<b>" + active + "</b> " + (active === 1 ? "task" : "tasks") + " left";
+
+    filterBtns.forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.filter === filter ? "true" : "false");
+    });
+
+    listEl.innerHTML = "";
+    if(shown.length === 0){
+      emptyEl.hidden = false;
+      listEl.hidden = true;
+      emptyEl.innerHTML = emptyMessage();
+      return;
+    }
+    emptyEl.hidden = true;
+    listEl.hidden = false;
+
+    shown.forEach(function(t){
+      var li = document.createElement("li");
+      li.className = "task" + (t.done ? " done" : "");
+      li.dataset.id = t.id;
+
+      var check = document.createElement("button");
+      check.type = "button";
+      check.className = "check";
+      check.setAttribute("aria-pressed", t.done ? "true" : "false");
+      check.setAttribute("aria-label", (t.done ? "Mark incomplete: " : "Mark complete: ") + t.text);
+      check.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      check.addEventListener("click", function(){ toggle(t.id); });
+
+      var label = document.createElement("span");
+      label.className = "label";
+      label.textContent = t.text;
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "del";
+      del.setAttribute("aria-label", "Delete task: " + t.text);
+      del.innerHTML = "&times;";
+      del.addEventListener("click", function(){ remove(t.id); });
+
+      li.appendChild(check);
+      li.appendChild(label);
+      li.appendChild(del);
+      listEl.appendChild(li);
+    });
+  }
+
+  function emptyMessage(){
+    if(tasks.length === 0){
+      return '<div class="emoji">🌤️</div><h2>All clear</h2><p>Nothing on the board yet. Add your first task above.</p>';
+    }
+    if(filter === "active"){
+      return '<div class="emoji">🎉</div><h2>All done</h2><p>Every task is checked off. Nice work.</p>';
+    }
+    if(filter === "completed"){
+      return '<div class="emoji">📭</div><h2>No completed tasks</h2><p>Finish something and it will show up here.</p>';
+    }
+    return '<div class="emoji">🌤️</div><h2>All clear</h2><p>Nothing on the board yet.</p>';
+  }
+
+  function addTask(text){
+    text = text.trim();
+    if(!text) return;
+    tasks.unshift({ id: uid(), text: text, done: false });
+    save();
+    render();
+  }
+  function toggle(id){
+    var t = tasks.find(function(x){ return x.id === id; });
+    if(t){ t.done = !t.done; save(); render(); }
+  }
+  function remove(id){
+    tasks = tasks.filter(function(x){ return x.id !== id; });
+    save();
+    render();
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    addTask(input.value);
+    input.value = "";
+    input.focus();
+  });
+
+  filterBtns.forEach(function(b){
+    b.addEventListener("click", function(){
+      filter = b.dataset.filter;
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Board</title>
+<style>
+  :root{
+    --ink:#182430;
+    --ink-soft:#5a6b78;
+    --ink-faint:#8a99a6;
+    --paper:#ffffff;
+    --line:#e6ebf0;
+    --line-strong:#d3dbe2;
+    --accent:#ff5a3c;
+    --accent-deep:#e8432a;
+    --accent-soft:#fff0ec;
+    --done:#12b886;
+    --done-soft:#e6f8f1;
+    --shadow:0 1px 2px rgba(20,30,40,.05), 0 18px 40px -18px rgba(20,30,40,.28);
+    --radius:14px;
+    --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono","Cascadia Code","Segoe UI Mono",Menlo,Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-sans);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1100px 560px at 12% -8%, #ffffff, rgba(255,255,255,0) 60%),
+      radial-gradient(900px 520px at 108% 112%, #eef3f8, rgba(238,243,248,0) 55%),
+      linear-gradient(180deg,#f4f7fa,#e9eef4);
+    background-attachment:fixed;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(24,36,48,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(24,36,48,.045) 1px,transparent 1px);
+    background-size:26px 26px;
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%,#000 55%,transparent 100%);
+    mask-image:radial-gradient(120% 90% at 50% 0%,#000 55%,transparent 100%);
+  }
+
+  .wrap{
+    position:relative;z-index:1;
+    max-width:640px;margin:0 auto;
+    padding:clamp(20px,5vw,56px) 16px 64px;
+  }
+
+  /* ---------- Header ---------- */
+  .head{margin-bottom:22px;}
+  .kicker{
+    font-family:var(--font-mono);
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent-deep);font-weight:600;margin:0 0 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .kicker::before{
+    content:"";width:22px;height:2px;background:var(--accent);border-radius:2px;
+  }
+  .title{
+    font-size:clamp(30px,7.5vw,46px);
+    line-height:1.02;font-weight:800;letter-spacing:-.025em;
+    margin:0 0 12px;
+  }
+  .title .dot{color:var(--accent);}
+  .lede{
+    margin:0;color:var(--ink-soft);
+    font-size:clamp(14px,3.6vw,16px);line-height:1.55;max-width:44ch;
+  }
+
+  /* ---------- Board ---------- */
+  .board{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  .add{
+    display:flex;gap:10px;align-items:stretch;
+    padding:16px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff,#fbfcfe);
+  }
+  .add input{
+    flex:1;min-width:0;
+    font-family:var(--font-sans);font-size:16px;color:var(--ink);
+    padding:12px 14px;
+    border:1.5px solid var(--line-strong);border-radius:10px;
+    background:#fff;outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .add input::placeholder{color:var(--ink-faint);}
+  .add input:hover{border-color:#b9c4cf;}
+  .add input:focus-visible{
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px rgba(255,90,60,.18);
+  }
+  .add-btn{
+    flex:none;
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-sans);font-weight:700;font-size:15px;
+    color:#fff;background:var(--accent);
+    border:none;border-radius:10px;padding:0 18px;
+    cursor:pointer;
+    transition:background .15s,transform .12s,box-shadow .15s;
+    box-shadow:0 6px 16px -8px rgba(255,90,60,.7);
+  }
+  .add-btn:hover{background:var(--accent-deep);transform:translateY(-1px);box-shadow:0 10px 22px -8px rgba(255,90,60,.75);}
+  .add-btn:active{transform:translateY(0);}
+  .add-btn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(255,90,60,.35);}
+  .add-btn svg{width:18px;height:18px;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    flex-wrap:wrap;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+    background:#fbfcfe;
+  }
+  .count{
+    font-family:var(--font-mono);font-size:12.5px;letter-spacing:.02em;
+    color:var(--ink-soft);font-weight:500;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .count b{
+    font-size:15px;font-weight:700;color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .count .pulse{
+    width:8px;height:8px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 0 rgba(255,90,60,.5);
+    animation:pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(255,90,60,.45);}
+    70%{box-shadow:0 0 0 8px rgba(255,90,60,0);}
+    100%{box-shadow:0 0 0 0 rgba(255,90,60,0);}
+  }
+
+  .filters{display:inline-flex;gap:4px;background:#eef2f6;padding:4px;border-radius:10px;}
+  .filters button{
+    font-family:var(--font-sans);font-size:13px;font-weight:600;
+    color:var(--ink-soft);
+    background:transparent;border:none;border-radius:7px;
+    padding:7px 13px;cursor:pointer;
+    transition:color .15s,background .15s,box-shadow .15s;
+  }
+  .filters button:hover{color:var(--ink);}
+  .filters button[aria-pressed="true"]{
+    color:var(--ink);background:#fff;
+    box-shadow:0 1px 2px rgba(20,30,40,.12);
+  }
+  .filters button:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(255,90,60,.4);
+  }
+
+  /* ---------- List ---------- */
+  .list{list-style:none;margin:0;padding:0;}
+  .task{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    align-items:center;gap:12px;
+    padding:13px 16px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+    transition:background .15s;
+  }
+  .task:last-child{border-bottom:none;}
+  .task:hover{background:#fafbfd;}
+  .task.enter{animation:enter .34s cubic-bezier(.2,.8,.2,1);}
+  @keyframes enter{
+    from{opacity:0;transform:translateY(-8px);}
+    to{opacity:1;transform:none;}
+  }
+  .task.leaving{animation:leave .2s ease forwards;}
+  @keyframes leave{
+    to{opacity:0;transform:translateX(14px) scale(.98);}
+  }
+
+  .check{
+    flex:none;width:24px;height:24px;
+    border:2px solid var(--line-strong);border-radius:50%;
+    background:#fff;cursor:pointer;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:border-color .15s,background .15s,transform .12s;
+  }
+  .check:hover{border-color:var(--done);transform:scale(1.06);}
+  .check:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(18,184,134,.28);}
+  .check svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.4);
+    transition:opacity .15s,transform .18s cubic-bezier(.2,.8,.2,1);}
+  .task.done .check{background:var(--done);border-color:var(--done);}
+  .task.done .check svg{opacity:1;transform:scale(1);}
+
+  .label{
+    font-size:16px;line-height:1.4;color:var(--ink);
+    word-break:break-word;min-width:0;
+    transition:color .2s;
+  }
+  .task.done .label{color:var(--ink-faint);}
+  .task.done .label::after{
+    content:attr(data-text);
+    position:absolute;left:44px;right:64px;top:50%;
+    height:2px;background:var(--ink-faint);border-radius:2px;
+    transform:translateY(-50%) scaleX(0);transform-origin:left;
+    animation:strike .3s ease .05s forwards;
+  }
+  @keyframes strike{to{transform:translateY(-50%) scaleX(1);}}
+
+  .del{
+    flex:none;width:34px;height:34px;
+    border:none;background:transparent;border-radius:9px;
+    color:var(--ink-faint);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    opacity:0;
+    transition:opacity .15s,background .15s,color .15s;
+  }
+  .task:hover .del,.del:focus-visible{opacity:1;}
+  .del:hover{background:var(--accent-soft);color:var(--accent-deep);}
+  .del:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(255,90,60,.3);}
+  .del svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;}
+
+  /* ---------- Empty state ---------- */
+  .empty{
+    padding:44px 20px 48px;text-align:center;
+  }
+  .empty .art{width:76px;height:76px;margin:0 auto 16px;display:block;}
+  .empty h3{margin:0 0 6px;font-size:19px;font-weight:700;letter-spacing:-.01em;}
+  .empty p{margin:0 auto;color:var(--ink-soft);font-size:14.5px;line-height:1.5;max-width:34ch;}
+
+  .foot{
+    margin-top:16px;text-align:center;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+    color:var(--ink-faint);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:420px){
+    .add{flex-direction:column;}
+    .add-btn{justify-content:center;padding:12px;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .filters{width:100%;justify-content:space-between;}
+    .filters button{flex:1;text-align:center;}
+    .del{opacity:1;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;}
+    .task.done .label::after{transform:translateY(-50%) scaleX(1);}
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="head">
+      <p class="kicker">Task Board</p>
+      <h1 class="title">What's on the board<span class="dot">.</span></h1>
+      <p class="lede">Capture a task, tick it off, and keep the list honest. Everything you add is saved right here in your browser.</p>
+    </header>
+
+    <section class="board" aria-label="Task board">
+      <form class="add" id="addForm" autocomplete="off">
+        <input id="taskInput" type="text" placeholder="Add a task…" aria-label="New task" required>
+        <button class="add-btn" type="submit">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          Add
+        </button>
+      </form>
+
+      <div class="toolbar">
+        <span class="count" id="count" aria-live="polite"></span>
+        <div class="filters" role="group" aria-label="Filter tasks">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="active" aria-pressed="false">Active</button>
+          <button type="button" data-filter="completed" aria-pressed="false">Completed</button>
+        </div>
+      </div>
+
+      <ul class="list" id="list"></ul>
+
+      <div class="empty" id="empty" hidden>
+        <svg class="art" viewBox="0 0 76 76" aria-hidden="true">
+          <rect x="14" y="10" width="48" height="56" rx="9" fill="#fff" stroke="#d3dbe2" stroke-width="2"/>
+          <line x1="24" y1="24" x2="52" y2="24" stroke="#e6ebf0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="24" y1="38" x2="44" y2="38" stroke="#e6ebf0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="24" y1="52" x2="48" y2="52" stroke="#e6ebf0" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="58" cy="58" r="14" fill="#ff5a3c"/>
+          <path d="M52 58h12M58 52v12" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>
+        <h3 id="emptyTitle">All clear</h3>
+        <p id="emptyText">No tasks yet. Type one above and hit Enter to get started.</p>
+      </div>
+    </section>
+
+    <p class="foot">Enter to add · Tab to move · Space to complete · Del to remove</p>
+  </main>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "taskboard.v1";
+  var listEl   = document.getElementById("list");
+  var formEl   = document.getElementById("addForm");
+  var inputEl  = document.getElementById("taskInput");
+  var countEl  = document.getElementById("count");
+  var emptyEl  = document.getElementById("empty");
+  var emptyTitle = document.getElementById("emptyTitle");
+  var emptyText  = document.getElementById("emptyText");
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll(".filters button"));
+
+  var tasks = load();
+  var filter = "all";
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(tasks)); }catch(e){}
+  }
+  function uid(){
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function visible(){
+    if(filter === "active")    return tasks.filter(function(t){return !t.done;});
+    if(filter === "completed") return tasks.filter(function(t){return t.done;});
+    return tasks;
+  }
+
+  function render(){
+    var shown = visible();
+    var remaining = tasks.filter(function(t){return !t.done;}).length;
+
+    // count
+    countEl.innerHTML =
+      '<span class="pulse" aria-hidden="true"></span>' +
+      '<b>' + remaining + '</b> ' + (remaining === 1 ? 'task' : 'tasks') + ' left';
+
+    // empty state
+    if(shown.length === 0){
+      emptyEl.hidden = false;
+      listEl.innerHTML = "";
+      if(tasks.length === 0){
+        emptyTitle.textContent = "All clear";
+        emptyText.textContent  = "No tasks yet. Type one above and hit Enter to get started.";
+      }else if(filter === "active"){
+        emptyTitle.textContent = "Nothing left to do";
+        emptyText.textContent  = "Every task is checked off. Nice work.";
+      }else{
+        emptyTitle.textContent = "No completed tasks";
+        emptyText.textContent  = "Finish a task and it will show up here.";
+      }
+      return;
+    }
+    emptyEl.hidden = true;
+
+    var html = shown.map(function(t){
+      return '<li class="task' + (t.done ? ' done' : '') + '" data-id="' + t.id + '">' +
+        '<button class="check" type="button" aria-pressed="' + t.done + '" ' +
+          'aria-label="' + (t.done ? 'Mark as active' : 'Mark as complete') + '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 6"/></svg>' +
+        '</button>' +
+        '<span class="label" data-text="' + esc(t.text) + '">' + esc(t.text) + '</span>' +
+        '<button class="del" type="button" aria-label="Delete task">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+        '</button>' +
+      '</li>';
+    }).join("");
+    listEl.innerHTML = html;
+  }
+
+  function addTask(text){
+    var t = { id: uid(), text: text, done: false };
+    tasks.unshift(t);
+    save();
+    render();
+    var first = listEl.querySelector('.task[data-id="' + t.id + '"]');
+    if(first){ first.classList.add("enter"); }
+  }
+
+  function toggleTask(id){
+    var t = tasks.find(function(x){return x.id === id;});
+    if(!t) return;
+    t.done = !t.done;
+    save();
+    render();
+  }
+
+  function deleteTask(id){
+    var li = listEl.querySelector('.task[data-id="' + id + '"]');
+    if(li){
+      li.classList.add("leaving");
+      setTimeout(function(){
+        tasks = tasks.filter(function(x){return x.id !== id;});
+        save();
+        render();
+      }, 180);
+    }else{
+      tasks = tasks.filter(function(x){return x.id !== id;});
+      save();
+      render();
+    }
+  }
+
+  function setFilter(f){
+    filter = f;
+    filterBtns.forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.filter === f ? "true" : "false");
+    });
+    render();
+  }
+
+  // events
+  formEl.addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = inputEl.value.trim();
+    if(!v) return;
+    addTask(v);
+    inputEl.value = "";
+    inputEl.focus();
+  });
+
+  listEl.addEventListener("click", function(e){
+    var li = e.target.closest(".task");
+    if(!li) return;
+    var id = li.dataset.id;
+    if(e.target.closest(".check")) toggleTask(id);
+    else if(e.target.closest(".del")) deleteTask(id);
+  });
+
+  filterBtns.forEach(function(b){
+    b.addEventListener("click", function(){ setFilter(b.dataset.filter); });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

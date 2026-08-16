@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian · Sales Dashboard</title>
+<style>
+  :root{
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", Menlo, Consolas, monospace;
+    --bg:#eef1f6; --bg-grad:radial-gradient(1200px 600px at 80% -10%, #ffffff, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #e6ecf7, transparent 60%);
+    --surface:#ffffff; --surface-2:#f5f7fb;
+    --border:#e4e8f0; --border-strong:#d3d9e4;
+    --text:#141a26; --text-2:#5a6474; --text-3:#8a93a5;
+    --accent:#0f766e; --accent-2:#14b8a6; --accent-soft:rgba(15,118,110,.10);
+    --pos:#15803d; --neg:#dc2626; --warn:#b45309;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 12px 30px -14px rgba(16,24,40,.18);
+    --shadow-lg:0 24px 60px -20px rgba(16,24,40,.35);
+    --grid:#eef1f6; --track:#eef1f6;
+    --focus:#0f766e;
+  }
+  [data-theme="dark"]{
+    --bg:#0a0e16; --bg-grad:radial-gradient(1200px 600px at 80% -10%, #101a2b, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #0d1524, transparent 60%);
+    --surface:#111826; --surface-2:#0e1420;
+    --border:#1e2634; --border-strong:#2a3444;
+    --text:#e7ecf4; --text-2:#98a3b6; --text-3:#64708a;
+    --accent:#2dd4bf; --accent-2:#5eead4; --accent-soft:rgba(45,212,191,.12);
+    --pos:#4ade80; --neg:#f87171; --warn:#fbbf24;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -18px rgba(0,0,0,.6);
+    --shadow-lg:0 30px 70px -24px rgba(0,0,0,.75);
+    --grid:#1a2333; --track:#1a2333;
+    --focus:#2dd4bf;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--font-sans);
+    background:var(--bg);
+    background-image:var(--bg-grad);
+    background-attachment:fixed;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    min-height:100vh;
+    transition:background-color .4s ease, color .4s ease;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:28px 22px 60px}
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    flex-wrap:wrap;margin-bottom:26px;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{
+    width:46px;height:46px;border-radius:13px;flex:none;
+    background:linear-gradient(150deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;box-shadow:var(--shadow);
+    position:relative;overflow:hidden;
+  }
+  .mark::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.35));transform:translateX(-120%);animation:sheen 5s ease-in-out infinite}
+  @keyframes sheen{0%,60%{transform:translateX(-120%)}80%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .mark svg{width:24px;height:24px}
+  .brand h1{font-size:1.32rem;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+  .brand .sub{font-size:.78rem;color:var(--text-3);font-family:var(--font-mono);letter-spacing:.02em}
+  .topbar-right{display:flex;align-items:center;gap:12px}
+  .live{
+    display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;
+    color:var(--text-2);background:var(--surface);border:1px solid var(--border);
+    padding:7px 12px;border-radius:999px;box-shadow:var(--shadow)
+  }
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--pos);box-shadow:0 0 0 0 rgba(21,128,61,.5);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(21,128,61,.5)}70%{box-shadow:0 0 0 7px rgba(21,128,61,0)}100%{box-shadow:0 0 0 0 rgba(21,128,61,0)}}
+  .theme-toggle{
+    display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+    background:var(--surface);border:1px solid var(--border);color:var(--text);
+    padding:8px 13px;border-radius:999px;font:600 .82rem var(--font-sans);
+    box-shadow:var(--shadow);transition:transform .15s ease, border-color .2s, background .3s;
+  }
+  .theme-toggle:hover{transform:translateY(-1px);border-color:var(--border-strong)}
+  .theme-toggle:active{transform:translateY(0)}
+  .theme-toggle .ico{width:18px;height:18px;display:grid;place-items:center}
+  .theme-toggle .ico svg{width:18px;height:18px}
+  .theme-toggle .ico .moon{display:none}
+  [data-theme="dark"] .theme-toggle .ico .sun{display:none}
+  [data-theme="dark"] .theme-toggle .ico .moon{display:block}
+
+  /* ---------- KPI tiles ---------- */
+  .kpis{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;
+  }
+  .tile{
+    position:relative;overflow:hidden;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:18px 18px 16px;box-shadow:var(--shadow);
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s;
+  }
+  .tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--border-strong)}
+  .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+  .tile.t2::before{background:var(--accent-2)}
+  .tile.t3::before{background:var(--pos)}
+  .tile.t4::before{background:var(--warn)}
+  .tile .label{font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);display:flex;align-items:center;gap:7px}
+  .tile .label .ic{width:15px;height:15px;opacity:.8}
+  .tile .value{font-family:var(--font-mono);font-size:1.95rem;font-weight:700;letter-spacing:-.02em;margin:10px 0 8px;line-height:1}
+  .tile .delta{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;font-weight:700;font-family:var(--font-mono)}
+  .tile .delta.up{color:var(--pos)} .tile .delta.down{color:var(--neg)}
+  .tile .delta .arrow{font-size:.7rem}
+  .tile .delta .ctx{color:var(--text-3);font-weight:500;font-family:var(--font-sans)}
+  .tile .spark{position:absolute;right:14px;bottom:12px;width:74px;height:30px;opacity:.9}
+  .tile .spark path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden;
+  }
+  .panel-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:18px 20px 14px;border-bottom:1px solid var(--border);
+  }
+  .panel-head h2{font-size:1.05rem;font-weight:800;letter-spacing:-.01em;margin:0}
+  .panel-head .desc{font-size:.8rem;color:var(--text-3);margin-top:3px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.76rem;color:var(--text-2);font-weight:600}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .i-rev{background:var(--accent)} .i-avg{background:transparent;border:2px dashed var(--text-3)}
+
+  .chart-wrap{padding:14px 18px 8px;position:relative}
+  .chart-svg{width:100%;height:auto;display:block;overflow:visible}
+  .chart-svg text{font-family:var(--font-mono);fill:var(--text-3);font-size:11px}
+  .chart-svg .grid-line{stroke:var(--grid);stroke-width:1}
+  .chart-svg .axis-base{stroke:var(--border-strong);stroke-width:1.5}
+  .chart-svg .avg-line{stroke:var(--text-3);stroke-width:1.5;stroke-dasharray:5 5;opacity:.7}
+  .chart-svg .bar{fill:var(--accent);transition:fill .15s ease, opacity .15s ease;cursor:pointer}
+  .chart-svg .bar:hover{fill:var(--accent-2)}
+  .chart-svg .bar.peak{fill:var(--accent-2)}
+  .chart-svg .bar-val{fill:var(--text-2);font-size:10px;font-weight:700;opacity:0;transition:opacity .15s}
+  .chart-svg .bar:hover + .bar-val, .chart-svg .bar.peak + .bar-val{opacity:1}
+  .chart-svg .hit{fill:transparent;cursor:pointer}
+  .chart-svg .bar-label{transition:fill .15s}
+  .chart-svg .bar-label.active{fill:var(--text);font-weight:700}
+
+  /* tooltip */
+  .tip{
+    position:absolute;pointer-events:none;z-index:5;
+    background:var(--text);color:var(--surface);
+    padding:9px 12px;border-radius:10px;font-size:.78rem;line-height:1.35;
+    box-shadow:var(--shadow-lg);white-space:nowrap;
+    transform:translate(-50%,-100%);opacity:0;transition:opacity .12s ease;
+    left:0;top:0;
+  }
+  .tip.show{opacity:1}
+  .tip .t-month{font-weight:800;font-size:.82rem;margin-bottom:2px}
+  .tip .t-row{display:flex;justify-content:space-between;gap:14px;font-family:var(--font-mono)}
+  .tip .t-row b{font-weight:700}
+  .tip::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--text)}
+
+  /* ---------- Table ---------- */
+  .table-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .search{position:relative}
+  .search input{
+    font:500 .85rem var(--font-sans);color:var(--text);
+    background:var(--surface-2);border:1px solid var(--border);
+    border-radius:10px;padding:9px 12px 9px 34px;width:230px;max-width:100%;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .search input:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search .s-ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-3)}
+  .count{font-size:.78rem;color:var(--text-3);font-family:var(--font-mono)}
+
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;min-width:720px}
+  thead th{
+    text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text-3);padding:12px 16px;white-space:nowrap;cursor:pointer;user-select:none;
+    border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);
+    transition:color .15s;
+  }
+  thead th:hover{color:var(--text)}
+  thead th .th-inner{display:inline-flex;align-items:center;gap:6px}
+  thead th.num .th-inner{justify-content:flex-end}
+  thead th .ind{width:12px;height:12px;opacity:0;transition:opacity .15s}
+  thead th.sorted .ind{opacity:1}
+  thead th.sorted{color:var(--accent)}
+  thead th .ind svg{width:12px;height:12px;display:block}
+  tbody td{padding:13px 16px;font-size:.88rem;border-bottom:1px solid var(--border);white-space:nowrap}
+  tbody tr{transition:background .15s}
+  tbody tr:hover{background:var(--accent-soft)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{text-align:right;font-family:var(--font-mono);font-weight:600}
+  td .client{display:flex;align-items:center;gap:10px}
+  .avatar{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+    font-size:.72rem;font-weight:800;color:#fff;font-family:var(--font-mono)}
+  .client .c-name{font-weight:600}
+  .client .c-mail{font-size:.72rem;color:var(--text-3)}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;
+    padding:4px 10px;border-radius:999px}
+  .badge .bd{width:7px;height:7px;border-radius:50%}
+  .b-won{background:rgba(21,128,61,.12);color:var(--pos)} .b-won .bd{background:var(--pos)}
+  .b-pending{background:rgba(180,83,9,.12);color:var(--warn)} .b-pending .bd{background:var(--warn)}
+  .b-lost{background:rgba(220,38,38,.12);color:var(--neg)} .b-lost .bd{background:var(--neg)}
+  .empty{padding:34px;text-align:center;color:var(--text-3);font-size:.9rem}
+
+  .foot{margin-top:8px;text-align:center;color:var(--text-3);font-size:.76rem;font-family:var(--font-mono)}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(14px);animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:560px){
+    .wrap{padding:20px 14px 44px}
+    .brand h1{font-size:1.15rem}
+    .tile .value{font-size:1.6rem}
+    .search input{width:100%}
+    .table-tools{width:100%}
+    .count{width:100%}
+  }
+  @media (max-width:360px){
+    .kpis{grid-template-columns:1fr}
+    .tile .value{font-size:1.5rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Topbar -->
+  <header class="topbar reveal">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Meridian Sales</h1>
+        <div class="sub">FY 2024 · Performance Overview</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="live"><span class="dot"></span> Live · updated just now</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
+        <span class="ico">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI tiles -->
+  <section class="kpis" id="kpis" aria-label="Key performance indicators"></section>
+
+  <!-- Revenue chart -->
+  <section class="panel reveal" style="animation-delay:.08s">
+    <div class="panel-head">
+      <div>
+        <h2>Monthly Revenue</h2>
+        <div class="desc">Gross revenue by month, Jan – Dec 2024</div>
+      </div>
+      <div class="legend">
+        <span><i class="i-rev"></i> Revenue</span>
+        <span><i class="i-avg"></i> Monthly average</span>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chartWrap">
+      <div class="tip" id="tip"></div>
+      <!-- svg injected here -->
+    </div>
+  </section>
+
+  <!-- Sales table -->
+  <section class="panel reveal" style="animation-delay:.16s">
+    <div class="panel-head">
+      <div>
+        <h2>Sales Records</h2>
+        <div class="desc">Click a column to sort · search to filter</div>
+      </div>
+      <div class="table-tools">
+        <div class="search">
+          <svg class="s-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="search" id="search" placeholder="Search deals, clients, regions…" aria-label="Search sales records">
+        </div>
+        <span class="count" id="count"></span>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="salesTable">
+        <thead><tr id="theadRow"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">Meridian Analytics · sample data · rendered with hand-drawn SVG</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Sample data ---------------- */
+  const MONTHS = [
+    {m:"Jan",rev:42500},{m:"Feb",rev:48200},{m:"Mar",rev:51800},{m:"Apr",rev:46300},
+    {m:"May",rev:55900},{m:"Jun",rev:61200},{m:"Jul",rev:58400},{m:"Aug",rev:63700},
+    {m:"Sep",rev:70100},{m:"Oct",rev:66800},{m:"Nov",rev:74500},{m:"Dec",rev:82300}
+  ];
+
+  const SALES = [
+    {id:"INV-2041",client:"Northwind Traders",region:"North America",product:"Enterprise Suite",rep:"Ava Chen",date:"2024-11-18",amount:48200,status:"won"},
+    {id:"INV-2042",client:"Globex Corp",region:"Europe",product:"Analytics Pro",rep:"Marcus Reid",date:"2024-11-24",amount:23900,status:"pending"},
+    {id:"INV-2043",client:"Initech Systems",region:"Asia Pacific",product:"Cloud Platform",rep:"Priya Nair",date:"2024-12-02",amount:61500,status:"won"},
+    {id:"INV-2044",client:"Umbrella Ltd",region:"Europe",product:"Enterprise Suite",rep:"Diego Santos",date:"2024-12-05",amount:12750,status:"lost"},
+    {id:"INV-2045",client:"Stark Industries",region:"North America",product:"Security Add-on",rep:"Ava Chen",date:"2024-12-09",amount:8400,status:"pending"},
+    {id:"INV-2046",client:"Wayne Enterprises",region:"Asia Pacific",product:"Analytics Pro",rep:"Liam O'Brien",date:"2024-12-11",amount:34600,status:"won"},
+    {id:"INV-2047",client:"Acme Corporation",region:"North America",product:"Cloud Platform",rep:"Marcus Reid",date:"2024-12-14",amount:52300,status:"pending"},
+    {id:"INV-2048",client:"Hooli Inc",region:"Europe",product:"Enterprise Suite",rep:"Priya Nair",date:"2024-12-16",amount:27800,status:"won"}
+  ];
+
+  const COLUMNS = [
+    {key:"id",label:"Invoice",type:"text"},
+    {key:"client",label:"Client",type:"text"},
+    {key:"region",label:"Region",type:"text"},
+    {key:"product",label:"Product",type:"text"},
+    {key:"rep",label:"Rep",type:"text"},
+    {key:"date",label:"Date",type:"date"},
+    {key:"amount",label:"Amount",type:"num"},
+    {key:"status",label:"Status",type:"text"}
+  ];
+
+  /* ---------------- Helpers ---------------- */
+  const $ = s => document.querySelector(s);
+  const money = n => "$" + Math.round(n).toLocaleString("en-US");
+  const moneyK = n => n>=1000 ? "$"+(n/1000).toFixed(n%1000===0?0:1)+"k" : "$"+n;
+  const fmtDate = iso => new Date(iso+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+  const initials = name => name.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+  const AV_COLORS = ["#0f766e","#2563eb","#db2777","#d97706","#7c3aed","#0891b2","#dc2626","#16a34a"];
+
+  /* ---------------- Theme ---------------- */
+  const root = document.documentElement;
+  const themeBtn = $("#themeToggle");
+  const themeLabel = $("#themeLabel");
+  function applyTheme(t){
+    root.setAttribute("data-theme",t);
+    themeLabel.textContent = t==="dark" ? "Light" : "Dark";
+    try{ localStorage.setItem("meridian-theme",t); }catch(e){}
+  }
+  let saved=null; try{ saved=localStorage.getItem("meridian-theme"); }catch(e){}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (prefersDark ? "dark" : "light"));
+  themeBtn.addEventListener("click",()=>{
+    applyTheme(root.getAttribute("data-theme")==="dark" ? "light" : "dark");
+  });
+
+  /* ---------------- KPI tiles ---------------- */
+  const totalRev = MONTHS.reduce((a,b)=>a+b.rev,0);
+  const avgRev = totalRev/12;
+  const peak = MONTHS.reduce((a,b)=>b.rev>a.rev?b:a);
+  const won = SALES.filter(s=>s.status==="won");
+  const closed = SALES.filter(s=>s.status!=="pending");
+  const winRate = Math.round(won.length/closed.length*100);
+  const avgDeal = Math.round(SALES.reduce((a,b)=>a+b.amount,0)/SALES.length);
+
+  function sparkline(vals,color){
+    const w=74,h=30,pad=3;
+    const min=Math.min(...vals),max=Math.max(...vals),rng=(max-min)||1;
+    const step=(w-pad*2)/(vals.length-1);
+    const pts=vals.map((v,i)=>[pad+i*step, pad+(h-pad*2)*(1-(v-min)/rng)]);
+    const d=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+    const last=pts[pts.length-1];
+    return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${d}" stroke="${color}"/>
+      <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4" fill="${color}"/>
+    </svg>`;
+  }
+
+  const tiles = [
+    {label:"Total Revenue",value:money(totalRev),delta:"+18.4%",dir:"up",ctx:"vs last year",
+     ic:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+     spark:sparkline(MONTHS.map(m=>m.rev),"var(--accent)")},
+    {label:"Avg Monthly",value:money(avgRev),delta:"+6.1%",dir:"up",ctx:"vs prior qtr",
+     ic:'<path d="M3 12h4l3 8 4-16 3 8h4"/>',
+     spark:sparkline([42,48,51,46,55,61,58,63,70,66,74,82],"var(--accent-2)")},
+    {label:"Win Rate",value:winRate+"%",delta:"+3.2%",dir:"up",ctx:"pts vs last mo",
+     ic:'<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14l-3-3"/>',
+     spark:sparkline([58,61,60,64,66,65,68,70,72,71,74,75],"var(--pos)")},
+    {label:"Avg Deal Size",value:money(avgDeal),delta:"-2.4%",dir:"down",ctx:"vs last mo",
+     ic:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>',
+     spark:sparkline([31,29,33,30,28,32,30,27,29,26,28,25],"var(--warn)")}
+  ];
+
+  $("#kpis").innerHTML = tiles.map((t,i)=>`
+    <article class="tile t${i+1} reveal" style="animation-delay:${.04*i}s">
+      <div class="label">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.ic}</svg>
+        ${t.label}
+      </div>
+      <div class="value">${t.value}</div>
+      <div class="delta ${t.dir}"><span class="arrow">${t.dir==="up"?"▲":"▼"}</span>${t.delta}<span class="ctx">${t.ctx}</span></div>
+      ${t.spark}
+    </article>`).join("");
+
+  /* ---------------- Bar chart (hand-drawn SVG) ---------------- */
+  const wrap = $("#chartWrap");
+  const tip = $("#tip");
+  const NS = "http://www.w3.org/2000/svg";
+  const VBW=760, VBH=340, padL=58, padR=16, padT=26, padB=42;
+  const plotW=VBW-padL-padR, plotH=VBH-padT-padB;
+  const maxVal=Math.max(...MONTHS.map(m=>m.rev));
+  const niceMax=Math.ceil(maxVal/20000)*20000;
+  const ticks=5;
+  const band=plotW/MONTHS.length;
+  const barW=Math.min(band*0.56,46);
+
+  function buildChart(){
+    const svg=document.createElementNS(NS,"svg");
+    svg.setAttribute("class","chart-svg");
+    svg.setAttribute("viewBox",`0 0 ${VBW} ${VBH}`);
+    svg.setAttribute("role","img");
+    svg.setAttribute("aria-label","Bar chart of monthly revenue for 2024");
+
+    // gridlines + y labels
+    for(let i=0;i<=ticks;i++){
+      const val=niceMax/ticks*i;
+      const y=padT+plotH-(val/niceMax)*plotH;
+      const line=document.createElementNS(NS,"line");
+      line.setAttribute("x1",padL);line.setAttribute("x2",padL+plotW);
+      line.setAttribute("y1",y);line.setAttribute("y2",y);
+      line.setAttribute("class", i===0?"axis-base":"grid-line");
+      svg.appendChild(line);
+      const t=document.createElementNS(NS,"text");
+      t.setAttribute("x",padL-10);t.setAttribute("y",y+4);t.setAttribute("text-anchor","end");
+      t.textContent=moneyK(val);
+      svg.appendChild(t);
+    }
+
+    // average line
+    const avgY=padT+plotH-(avgRev/niceMax)*plotH;
+    const avgLine=document.createElementNS(NS,"line");
+    avgLine.setAttribute("x1",padL);avgLine.setAttribute("x2",padL+plotW);
+    avgLine.setAttribute("y1",avgY);avgLine.setAttribute("y2",avgY);
+    avgLine.setAttribute("class","avg-line");
+    svg.appendChild(avgLine);
+
+    // bars
+    MONTHS.forEach((d,i)=>{
+      const h=(d.rev/niceMax)*plotH;
+      const x=padL+i*band+(band-barW)/2;
+      const y=padT+plotH-h;
+      const cx=padL+i*band+band/2;
+
+      const bar=document.createElementNS(NS,"rect");
+      bar.setAttribute("class","bar"+(d===peak?" peak":""));
+      bar.setAttribute("x",x);bar.setAttribute("width",barW);
+      bar.setAttribute("rx",5);
+      bar.setAttribute("y",padT+plotH);bar.setAttribute("height",0);
+      bar.dataset.finalY=y;bar.dataset.finalH=h;
+      svg.appendChild(bar);
+
+      const val=document.createElementNS(NS,"text");
+      val.setAttribute("class","bar-val");
+      val.setAttribute("x",cx);val.setAttribute("y",y-8);val.setAttribute("text-anchor","middle");
+      val.textContent=moneyK(d.rev);
+      svg.appendChild(val);
+
+      const lbl=document.createElementNS(NS,"text");
+      lbl.setAttribute("class","bar-label");
+      lbl.setAttribute("x",cx);lbl.setAttribute("y",padT+plotH+20);lbl.setAttribute("text-anchor","middle");
+      lbl.textContent=d.m;
+      svg.appendChild(lbl);
+
+      const hit=document.createElementNS(NS,"rect");
+      hit.setAttribute("class","hit");
+      hit.setAttribute("x",padL+i*band);hit.setAttribute("y",padT);
+      hit.setAttribute("width",band);hit.setAttribute("height",plotH);
+      hit.addEventListener("mouseenter",()=>showTip(d,cx,y,bar,lbl));
+      hit.addEventListener("mousemove",()=>showTip(d,cx,y,bar,lbl));
+      hit.addEventListener("mouseleave",hideTip);
+      svg.appendChild(hit);
+    });
+
+    wrap.appendChild(svg);
+    animateBars(svg);
+  }
+
+  function animateBars(svg){
+    const bars=[...svg.querySelectorAll(".bar")];
+    const start=performance.now(),dur=900;
+    function frame(now){
+      const t=Math.min(1,(now-start)/dur);
+      const e=1-Math.pow(1-t,3);
+      bars.forEach(b=>{
+        const fh=+b.dataset.finalH, fy=+b.dataset.finalY;
+        b.setAttribute("height",(fh*e).toFixed(2));
+        b.setAttribute("y",(padT+plotH-fh*e).toFixed(2));
+      });
+      if(t<1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function showTip(d,cx,y,bar,lbl){
+    const diff=d.rev-avgRev;
+    const pct=(diff/avgRev*100);
+    tip.innerHTML=`
+      <div class="t-month">${d.m} 2024</div>
+      <div class="t-row"><span>Revenue</span><b>${money(d.rev)}</b></div>
+      <div class="t-row"><span>vs avg</span><b style="color:${diff>=0?"var(--pos)":"var(--neg)"}">${diff>=0?"+":"−"}${moneyK(Math.abs(diff))} (${pct>=0?"+":"−"}${Math.abs(pct).toFixed(1)}%)</b></div>`;
+    const wr=wrap.getBoundingClientRect();
+    const sr=bar.getBoundingClientRect();
+    const left=sr.left-wr.left+sr.width/2;
+    const top=sr.top-wr.top-10;
+    tip.style.left=left+"px";
+    tip.style.top=top+"px";
+    tip.classList.add("show");
+    lbl.classList.add("active");
+  }
+  function hideTip(){
+    tip.classList.remove("show");
+    wrap.querySelectorAll(".bar-label.active").forEach(l=>l.classList.remove("active"));
+  }
+
+  buildChart();
+
+  /* ---------------- Table: sort + filter ---------------- */
+  const theadRow=$("#theadRow");
+  const tbody=$("#tbody");
+  const countEl=$("#count");
+  const searchEl=$("#search");
+  let sortKey="date", sortDir="desc", query="";
+
+  function buildHead(){
+    theadRow.innerHTML=COLUMNS.map(c=>{
+      const num=c.type==="num";
+      return `<th data-key="${c.key}" class="${num?"num":""}" aria-sort="none">
+        <span class="th-inner">${c.label}
+          <span class="ind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M6 11l6-6 6 6"/>
+            </svg>
+          </span>
+        </span></th>`;
+    }).join("");
+    theadRow.querySelectorAll("th").forEach(th=>{
+      th.addEventListener("click",()=>{
+        const k=th.dataset.key;
+        if(k===sortKey){ sortDir=sortDir==="asc"?"desc":"asc"; }
+        else{ sortKey=k; sortDir=COLUMNS.find(c=>c.key===k).type==="num"?"desc":"asc"; }
+        render();
+      });
+    });
+  }
+
+  function statusBadge(s){
+    const map={won:["b-won","Won"],pending:["b-pending","Pending"],lost:["b-lost","Lost"]};
+    const [cls,txt]=map[s];
+    return `<span class="badge ${cls}"><span class="bd"></span>${txt}</span>`;
+  }
+
+  function render(){
+    let rows=SALES.slice();
+    if(query){
+      const q=query.toLowerCase();
+      rows=rows.filter(r=>[r.id,r.client,r.region,r.product,r.rep,r.status].some(v=>v.toLowerCase().includes(q)));
+    }
+    const col=COLUMNS.find(c=>c.key===sortKey);
+    rows.sort((a,b)=>{
+      let av=a[sortKey], bv=b[sortKey];
+      if(col.type==="num"){ av=+av; bv=+bv; }
+      else if(col.type==="date"){ av=new Date(av).getTime(); bv=new Date(bv).getTime(); }
+      else{ av=String(av).toLowerCase(); bv=String(bv).toLowerCase(); }
+      if(av<bv) return sortDir==="asc"?-1:1;
+      if(av>bv) return sortDir==="asc"?1:-1;
+      return 0;
+    });
+
+    // header indicators
+    theadRow.querySelectorAll("th").forEach(th=>{
+      const active=th.dataset.key===sortKey;
+      th.classList.toggle("sorted",active);
+      th.setAttribute("aria-sort",active?(sortDir==="asc"?"ascending":"descending"):"none");
+      const ind=th.querySelector(".ind svg");
+      if(ind) ind.style.transform=active?(sortDir==="asc"?"none":"rotate(180deg)"):"none";
+    });
+
+    if(rows.length===0){
+      tbody.innerHTML=`<tr><td colspan="${COLUMNS.length}" class="empty">No records match “${query}”.</td></tr>`;
+    }else{
+      tbody.innerHTML=rows.map((r,i)=>{
+        const av=AV_COLORS[i%AV_COLORS.length];
+        return `<tr>
+          <td class="num" style="color:var(--text-3);font-weight:500">${r.id}</td>
+          <td><div class="client">
+            <span class="avatar" style="background:${av}">${initials(r.client)}</span>
+            <span><span class="c-name">${r.client}</span></span>
+          </div></td>
+          <td>${r.region}</td>
+          <td>${r.product}</td>
+          <td>${r.rep}</td>
+          <td>${fmtDate(r.date)}</td>
+          <td class="num">${money(r.amount)}</td>
+          <td>${statusBadge(r.status)}</td>
+        </tr>`;
+      }).join("");
+    }
+    countEl.textContent=`${rows.length} of ${SALES.length} records`;
+  }
+
+  searchEl.addEventListener("input",e=>{ query=e.target.value.trim(); render(); });
+
+  buildHead();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian — Pricing</title>
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --bg-2:#ece7dc;
+    --surface:#ffffff;
+    --surface-2:#f7f4ee;
+    --ink:#171512;
+    --ink-2:#4a463f;
+    --muted:#8a8478;
+    --line:rgba(23,21,18,.12);
+    --line-2:rgba(23,21,18,.07);
+    --accent:#e04a1f;
+    --accent-ink:#ffffff;
+    --accent-soft:rgba(224,74,31,.10);
+    --good:#1f9d6b;
+    --shadow:0 1px 2px rgba(23,21,18,.05), 0 22px 44px -26px rgba(23,21,18,.30);
+    --shadow-lg:0 2px 4px rgba(23,21,18,.06), 0 40px 70px -30px rgba(23,21,18,.40);
+    --r:16px;
+    --r-sm:11px;
+    --maxw:1120px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f0e0c;
+      --bg-2:#151310;
+      --surface:#1a1815;
+      --surface-2:#211e1a;
+      --ink:#f3efe7;
+      --ink-2:#c9c3b7;
+      --muted:#8f887b;
+      --line:rgba(243,239,231,.14);
+      --line-2:rgba(243,239,231,.07);
+      --accent:#ff6a3d;
+      --accent-ink:#1a0f08;
+      --accent-soft:rgba(255,106,61,.14);
+      --good:#37c98a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 24px 46px -26px rgba(0,0,0,.7);
+      --shadow-lg:0 2px 4px rgba(0,0,0,.5), 0 44px 74px -30px rgba(0,0,0,.85);
+    }
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+  .eyebrow{
+    font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 14px;
+  }
+  .eyebrow::before{content:"";display:inline-block;width:22px;height:2px;background:var(--accent);
+    vertical-align:middle;margin-right:10px;transform:translateY(-2px)}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px);
+    -webkit-backdrop-filter:saturate(1.4) blur(10px);
+    border-bottom:1px solid var(--line-2);
+  }
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em;font-size:18px}
+  .brand .mark{
+    width:26px;height:26px;border-radius:8px;background:var(--accent);position:relative;flex:none;
+    box-shadow:0 4px 12px -4px var(--accent);
+  }
+  .brand .mark::after{content:"";position:absolute;inset:6px;border-radius:4px;background:var(--bg);opacity:.9}
+  .nav{display:flex;align-items:center;gap:26px}
+  .nav a{color:var(--ink-2);text-decoration:none;font-size:14px;font-weight:600;transition:color .2s}
+  .nav a:hover{color:var(--ink)}
+  .nav .cta{
+    color:var(--ink);background:var(--surface);border:1px solid var(--line);
+    padding:8px 15px;border-radius:999px;font-weight:700;
+  }
+  .nav .cta:hover{border-color:var(--ink)}
+  @media (max-width:560px){ .nav a:not(.cta){display:none} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:clamp(40px,7vw,84px) 0 clamp(28px,4vw,44px)}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(24px,4vw,56px);align-items:center}
+  @media (max-width:860px){ .hero-grid{grid-template-columns:1fr} }
+  .hero h1{
+    font-size:clamp(34px,6.4vw,62px);line-height:1.02;letter-spacing:-.03em;font-weight:800;margin:0 0 18px;
+  }
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p.lead{font-size:clamp(15px,2.2vw,18px);color:var(--ink-2);max-width:46ch;margin:0 0 26px}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{
+    display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-2);
+    background:var(--surface);border:1px solid var(--line);padding:8px 13px;border-radius:999px;
+  }
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 22%,transparent)}
+
+  /* billing toggle */
+  .billing{
+    display:inline-flex;align-items:center;gap:4px;background:var(--surface);
+    border:1px solid var(--line);border-radius:999px;padding:5px;box-shadow:var(--shadow);
+  }
+  .billing button{
+    border:0;background:transparent;color:var(--ink-2);font:inherit;font-weight:700;font-size:14px;
+    padding:9px 16px;border-radius:999px;cursor:pointer;transition:color .2s,background .2s;
+  }
+  .billing button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .save{
+    font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--good);
+    background:color-mix(in srgb,var(--good) 15%,transparent);padding:3px 7px;border-radius:999px;margin-left:2px;
+  }
+
+  /* ---------- pricing ---------- */
+  .pricing{padding:clamp(20px,3vw,32px) 0 clamp(40px,6vw,72px)}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,22px);align-items:stretch}
+  @media (max-width:900px){ .cards{grid-template-columns:1fr;max-width:460px;margin:0 auto} }
+
+  .card{
+    position:relative;display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:clamp(22px,3vw,30px);box-shadow:var(--shadow);
+    transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s,border-color .35s;
+  }
+  .card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);border-color:var(--line)}
+  .card.featured{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), var(--shadow-lg);
+    background:linear-gradient(180deg, var(--accent-soft), var(--surface) 42%);
+  }
+  @media (min-width:901px){ .card.featured{transform:translateY(-14px)} .card.featured:hover{transform:translateY(-20px)} }
+
+  .badge{
+    position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;padding:6px 14px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 8px 18px -8px var(--accent);
+  }
+  .badge::before{content:"★ "}
+
+  .tier{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .tier .glyph{
+    width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+  }
+  .card.featured .tier .glyph{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  .tier h3{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+  .tier .tag{font-size:13px;color:var(--muted);font-weight:500}
+
+  .price{display:flex;align-items:flex-end;gap:6px;margin:2px 0 4px}
+  .price .cur{font-size:22px;font-weight:700;color:var(--ink-2);transform:translateY(-14px)}
+  .price .amount{font-size:clamp(44px,8vw,58px);font-weight:800;letter-spacing:-.04em;line-height:.9}
+  .price .per{font-size:15px;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .price-note{font-size:13px;color:var(--muted);min-height:18px;margin:0 0 18px}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    font:inherit;font-weight:700;font-size:15px;padding:13px 18px;border-radius:var(--r-sm);
+    cursor:pointer;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);
+    transition:transform .15s,background .2s,border-color .2s,box-shadow .2s;
+  }
+  .btn:hover{transform:translateY(-1px);border-color:var(--ink)}
+  .btn:active{transform:translateY(0)}
+  .btn .arrow{transition:transform .2s}
+  .btn:hover .arrow{transform:translateX(3px)}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 10px 22px -12px var(--accent)}
+  .btn.primary:hover{filter:brightness(1.05)}
+
+  .divider{height:1px;background:var(--line-2);margin:20px 0}
+  .feats-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  ul.feats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px}
+  ul.feats li{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;color:var(--ink-2)}
+  ul.feats li svg{flex:none;margin-top:2px;color:var(--good)}
+  .card.featured ul.feats li svg{color:var(--accent)}
+
+  /* ---------- trust ---------- */
+  .trust{padding:clamp(30px,5vw,56px) 0}
+  .trust .head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:26px}
+  .trust h2{font-size:clamp(22px,3.4vw,30px);font-weight:800;letter-spacing:-.02em;margin:0}
+  .trust .head p{margin:0;color:var(--muted);font-size:14px}
+  .logos{display:flex;flex-wrap:wrap;gap:14px}
+  .logo{
+    display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:15px;color:var(--ink-2);
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 18px;
+    transition:transform .25s,color .25s,border-color .25s;
+  }
+  .logo:hover{transform:translateY(-3px);color:var(--ink);border-color:var(--ink)}
+  .logo .sq{width:16px;height:16px;border-radius:5px;background:var(--ink);opacity:.85}
+  .logo:nth-child(2) .sq{border-radius:50%}
+  .logo:nth-child(3) .sq{transform:rotate(45deg);border-radius:3px}
+  .logo:nth-child(4) .sq{border-radius:50% 50% 50% 3px}
+  .logo:nth-child(5) .sq{border-radius:3px 3px 3px 50%}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line-2);padding:34px 0 44px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+  footer .fbrand{display:flex;align-items:center;gap:9px;font-weight:800}
+  footer .fbrand .mark{width:20px;height:20px;border-radius:6px;background:var(--accent);position:relative}
+  footer .fbrand .mark::after{content:"";position:absolute;inset:5px;border-radius:3px;background:var(--bg);opacity:.9}
+  footer .links{display:flex;gap:20px;flex-wrap:wrap}
+  footer .links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:600}
+  footer .links a:hover{color:var(--ink)}
+  footer .copy{width:100%;color:var(--muted);font-size:13px;margin-top:6px}
+
+  /* ---------- reveal ---------- */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><span class="mark"></span>Meridian</div>
+    <nav class="nav">
+      <a href="#">Product</a>
+      <a href="#">Customers</a>
+      <a href="#">Docs</a>
+      <a href="#" class="cta">Sign in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="reveal">
+        <p class="eyebrow">Pricing</p>
+        <h1>One workspace.<br>Every plan <em>scales</em> with you.</h1>
+        <p class="lead">Start free, upgrade when you're ready. No hidden fees, no lock-in — just the tools your team needs to ship faster, at a price that stays honest.</p>
+        <div class="meta">
+          <span class="chip"><span class="dot"></span>14-day free trial</span>
+          <span class="chip">No credit card required</span>
+          <span class="chip">Cancel anytime</span>
+        </div>
+      </div>
+
+      <div class="reveal" style="transition-delay:.08s">
+        <div class="billing" role="group" aria-label="Billing period">
+          <button id="billMonthly" aria-pressed="true">Monthly</button>
+          <button id="billYearly" aria-pressed="false">Yearly <span class="save">-20%</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing">
+    <div class="wrap">
+      <div class="cards">
+
+        <!-- STARTER -->
+        <article class="card reveal" style="transition-delay:.05s">
+          <div class="tier">
+            <span class="glyph" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="M3 17l9 5 9-5"/></svg>
+            </span>
+            <div>
+              <h3>Starter</h3>
+              <div class="tag">For solo builders</div>
+            </div>
+          </div>
+          <div class="price">
+            <span class="cur">$</span>
+            <span class="amount" data-monthly="9" data-yearly="7">9</span>
+            <span class="per">/mo</span>
+          </div>
+          <p class="price-note" data-note>per user, billed monthly</p>
+          <button class="btn" type="button">Start free trial <span class="arrow">→</span></button>
+          <div class="divider"></div>
+          <p class="feats-title">What's included</p>
+          <ul class="feats">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Up to 3 projects</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>5 GB storage</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Community support</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Basic analytics</li>
+          </ul>
+        </article>
+
+        <!-- PRO (featured) -->
+        <article class="card featured reveal" style="transition-delay:.12s">
+          <span class="badge">Most popular</span>
+          <div class="tier">
+            <span class="glyph" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+            </span>
+            <div>
+              <h3>Pro</h3>
+              <div class="tag">For growing teams</div>
+            </div>
+          </div>
+          <div class="price">
+            <span class="cur">$</span>
+            <span class="amount" data-monthly="29" data-yearly="23">29</span>
+            <span class="per">/mo</span>
+          </div>
+          <p class="price-note" data-note>per user, billed monthly</p>
+          <button class="btn primary" type="button">Start free trial <span class="arrow">→</span></button>
+          <div class="divider"></div>
+          <p class="feats-title">Everything in Starter, plus</p>
+          <ul class="feats">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Unlimited projects</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>100 GB storage</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Priority support</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Advanced analytics</li>
+          </ul>
+        </article>
+
+        <!-- ENTERPRISE -->
+        <article class="card reveal" style="transition-delay:.19s">
+          <div class="tier">
+            <span class="glyph" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 9h4M10 13h4M10 17h4"/></svg>
+            </span>
+            <div>
+              <h3>Enterprise</h3>
+              <div class="tag">For large orgs</div>
+            </div>
+          </div>
+          <div class="price">
+            <span class="cur">$</span>
+            <span class="amount" data-monthly="99" data-yearly="79">99</span>
+            <span class="per">/mo</span>
+          </div>
+          <p class="price-note" data-note>per user, billed monthly</p>
+          <button class="btn" type="button">Contact sales <span class="arrow">→</span></button>
+          <div class="divider"></div>
+          <p class="feats-title">Everything in Pro, plus</p>
+          <ul class="feats">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Unlimited storage</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Dedicated manager</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>SSO &amp; audit logs</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>99.9% uptime SLA</li>
+          </ul>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="trust">
+    <div class="wrap">
+      <div class="head reveal">
+        <h2>Trusted by 12,000+ teams</h2>
+        <p>From weekend side-projects to the Fortune 500.</p>
+      </div>
+      <div class="logos reveal" style="transition-delay:.06s">
+        <span class="logo"><span class="sq"></span>Northwind</span>
+        <span class="logo"><span class="sq"></span>Acme Corp</span>
+        <span class="logo"><span class="sq"></span>Vertex</span>
+        <span class="logo"><span class="sq"></span>Halcyon</span>
+        <span class="logo"><span class="sq"></span>Bluepeak</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fbrand"><span class="mark"></span>Meridian</div>
+    <nav class="links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Security</a>
+      <a href="#">Status</a>
+    </nav>
+    <div class="copy">© 2024 Meridian Labs. Prices in USD, excl. tax.</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- billing toggle with animated price count ---- */
+  var monthly = document.getElementById('billMonthly');
+  var yearly  = document.getElementById('billYearly');
+  var amounts = Array.prototype.slice.call(document.querySelectorAll('.amount'));
+  var notes   = Array.prototype.slice.call(document.querySelectorAll('[data-note]'));
+  var current = 'monthly';
+
+  function animate(el, from, to){
+    if(from === to){ el.textContent = to; return; }
+    var start = performance.now(), dur = 420;
+    function tick(now){
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + (to - from) * eased);
+      if(p < 1) requestAnimationFrame(tick);
+      else el.textContent = to;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function setBilling(mode){
+    current = mode;
+    monthly.setAttribute('aria-pressed', mode === 'monthly');
+    yearly.setAttribute('aria-pressed', mode === 'yearly');
+    amounts.forEach(function(el){
+      var from = parseInt(el.textContent, 10) || 0;
+      var to   = parseInt(el.getAttribute('data-' + mode), 10);
+      animate(el, from, to);
+    });
+    notes.forEach(function(n){
+      n.textContent = mode === 'yearly' ? 'per user, billed annually' : 'per user, billed monthly';
+    });
+  }
+
+  monthly.addEventListener('click', function(){ setBilling('monthly'); });
+  yearly.addEventListener('click', function(){ setBilling('yearly'); });
+
+  /* ---- scroll reveal ---- */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+  if(reduce || !('IntersectionObserver' in window)){
+    items.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    items.forEach(function(el){ io.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>

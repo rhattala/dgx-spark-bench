@@ -97,14 +97,17 @@ does nothing.
 Both models scored 17–18/18 on the hardest front-end task under static checks. Driving the
 same pages in a real browser (`harness/functional_check.py`) reverses the ranking:
 
+**Both models, 3 runs per tier, 12 pages each:**
+
 | | static checks | functional checks |
 |---|---|---|
-| DeepSeek-V4-Flash | 55/63 | **25/25** (identical across 3 runs) |
-| Qwen3.8-27B | **62/63** | 22/25 |
+| DeepSeek-V4-Flash | 54.3/63 | **75/75 (100%)** |
+| Qwen3.8-27B | **61.3/63** | 66/75 (88%) |
 
-Qwen's kanban board fails `add_card_works`, `localStorage_written` and `responsive_at_320`
-— and the static suite scored that same page **18/18**, because the strings it looks for
-were all present in the source.
+**Static says Qwen. Functional says DeepSeek.** And the failure is reproducible: Qwen's
+kanban board failed `add_card_EXISTS` and `add_card_works` on **all three runs**, while
+scoring **18/18** on static checks every time — because every string the static suite greps
+for was present in the source. One run also threw an uncaught `Unexpected token 'null'`.
 
 **A check suite both candidates max out has stopped measuring**, and worse, it can rank a
 broken page above a working one with near-zero run-to-run variance. Presence in the source

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Board</title>
+<style>
+  :root{
+    --bg:#e7e9f2;
+    --ink:#1b1d2b;
+    --ink-soft:#5a5d72;
+    --line:#d5d8e6;
+    --card:#ffffff;
+    --accent:#ff5a3c;
+    --accent-ink:#fff;
+    --accent-soft:#ffece6;
+    --teal:#0f9d8f;
+    --teal-soft:#d9f4f0;
+    --amber:#f5a623;
+    --amber-soft:#fff3d8;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,29,43,.05), 0 18px 40px -20px rgba(27,29,43,.35);
+    --focus:0 0 0 3px var(--accent-soft), 0 0 0 4px var(--accent);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    min-height:100vh;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* ambient background */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(60% 55% at 12% 8%, rgba(255,90,60,.14), transparent 60%),
+      radial-gradient(55% 50% at 92% 92%, rgba(15,157,143,.14), transparent 60%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background-image:radial-gradient(rgba(27,29,43,.06) 1px, transparent 1px);
+    background-size:22px 22px;
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000, transparent 75%);
+    mask-image:radial-gradient(120% 90% at 50% 0%, #000, transparent 75%);
+  }
+
+  .wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:44px 20px 64px;}
+
+  /* header */
+  .head{display:flex;align-items:center;gap:14px;margin-bottom:26px;}
+  .mark{
+    width:46px;height:46px;flex:none;border-radius:13px;
+    background:var(--ink);color:#fff;display:grid;place-items:center;
+    box-shadow:0 10px 22px -10px rgba(27,29,43,.6);
+  }
+  .mark svg{width:24px;height:24px;}
+  .head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1;}
+  .head p{margin:5px 0 0;font-size:13.5px;color:var(--ink-soft);}
+
+  /* card */
+  .board{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+
+  /* input row */
+  .add{display:flex;gap:10px;padding:18px 18px 14px;border-bottom:1px solid var(--line);}
+  .add input{
+    flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);
+    padding:12px 14px;border:1.5px solid var(--line);border-radius:11px;background:#fbfbfe;
+    transition:border-color .15s, box-shadow .15s, background .15s;
+  }
+  .add input::placeholder{color:#9a9db0;}
+  .add input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:var(--focus);}
+  .add button{
+    flex:none;font:inherit;font-weight:700;font-size:14px;color:var(--accent-ink);
+    background:var(--accent);border:none;border-radius:11px;padding:0 18px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+    transition:transform .12s, box-shadow .15s, background .15s;
+    box-shadow:0 8px 18px -8px rgba(255,90,60,.7);
+  }
+  .add button svg{width:16px;height:16px;}
+  .add button:hover{transform:translateY(-1px);box-shadow:0 12px 22px -8px rgba(255,90,60,.8);}
+  .add button:active{transform:translateY(0);}
+  .add button:focus-visible{outline:none;box-shadow:var(--focus);}
+
+  /* toolbar */
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;flex-wrap:wrap;}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;}
+  .filters button{
+    font:inherit;font-size:13px;font-weight:600;color:var(--ink-soft);
+    background:transparent;border:1.5px solid var(--line);border-radius:999px;
+    padding:7px 14px;cursor:pointer;transition:all .15s;
+  }
+  .filters button:hover{color:var(--ink);border-color:#b9bdd2;}
+  .filters button:focus-visible{outline:none;box-shadow:var(--focus);}
+  .filters button[aria-pressed="true"]{
+    background:var(--ink);color:#fff;border-color:var(--ink);
+  }
+  .count{font-size:13px;font-weight:600;color:var(--ink-soft);white-space:nowrap;}
+  .count b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums;}
+
+  /* list */
+  .list{list-style:none;margin:0;padding:6px 10px 10px;max-height:52vh;overflow:auto;}
+  .list::-webkit-scrollbar{width:10px;}
+  .list::-webkit-scrollbar-thumb{background:#cfd2e0;border-radius:99px;border:3px solid var(--card);}
+
+  .task{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 12px;border-radius:12px;position:relative;
+    animation:pop .34s cubic-bezier(.2,.8,.2,1) both;
+    transition:background .15s;
+  }
+  .task + .task{margin-top:4px;}
+  .task:hover{background:#f6f7fb;}
+  @keyframes pop{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .check{
+    flex:none;width:24px;height:24px;border-radius:50%;cursor:pointer;
+    border:2px solid #c3c6d6;background:#fff;padding:0;position:relative;
+    transition:transform .15s, border-color .15s, background .15s;
+  }
+  .check:hover{border-color:var(--teal);transform:scale(1.08);}
+  .check:focus-visible{outline:none;box-shadow:var(--focus);}
+  .check svg{width:14px;height:14px;position:absolute;inset:0;margin:auto;
+    stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .25s ease .05s;}
+  .task.done .check{background:var(--teal);border-color:var(--teal);}
+  .task.done .check svg{stroke-dashoffset:0;}
+
+  .text{
+    flex:1;min-width:0;font-size:15px;line-height:1.4;word-break:break-word;
+    padding:2px 0;transition:color .2s;
+  }
+  .task.done .text{color:var(--ink-soft);}
+  .task.done .text::after{
+    content:"";position:absolute;left:44px;right:56px;top:50%;height:1.5px;
+    background:var(--ink-soft);transform:scaleX(0);transform-origin:left;
+    transition:transform .3s ease;
+  }
+  .task.done .text::after{transform:scaleX(1);}
+
+  .del{
+    flex:none;width:34px;height:34px;border-radius:9px;cursor:pointer;
+    border:none;background:transparent;color:#b4b7c8;display:grid;place-items:center;
+    transition:background .15s, color .15s, transform .12s;
+  }
+  .del svg{width:18px;height:18px;}
+  .del:hover{background:var(--accent-soft);color:var(--accent);transform:scale(1.05);}
+  .del:focus-visible{outline:none;box-shadow:var(--focus);}
+
+  /* empty state */
+  .empty{display:none;text-align:center;padding:44px 20px 48px;}
+  .empty.show{display:block;animation:pop .4s ease both;}
+  .empty .face{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;
+    background:var(--amber-soft);display:grid;place-items:center;}
+  .empty .face svg{width:34px;height:34px;}
+  .empty h2{font-size:18px;font-weight:800;margin:0 0 6px;}
+  .empty p{font-size:14px;color:var(--ink-soft);margin:0;}
+
+  /* footer */
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .foot .hint{font-size:12.5px;color:var(--ink-soft);}
+  .foot .hint kbd{
+    font:inherit;font-size:11px;font-weight:700;background:#f1f2f8;color:var(--ink);
+    border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:2px 6px;
+  }
+  .clear{
+    font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    background:transparent;border:none;cursor:pointer;padding:6px 8px;border-radius:8px;
+    transition:color .15s, background .15s;
+  }
+  .clear:hover{color:var(--accent);background:var(--accent-soft);}
+  .clear:focus-visible{outline:none;box-shadow:var(--focus);}
+
+  @media (max-width:400px){
+    .wrap{padding:28px 14px 48px;}
+    .head h1{font-size:23px;}
+    .add{padding:14px 14px 12px;}
+    .add button{padding:0 14px;}
+    .toolbar{padding:12px 14px;}
+    .list{padding:6px 8px 8px;}
+    .task{padding:11px 10px;gap:10px;}
+    .task.done .text::after{left:40px;right:52px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="19" cy="18" r="2.4" fill="#ff5a3c"/></svg>
+      </div>
+      <div>
+        <h1>Task Board</h1>
+        <p>Capture it, tick it off, move on.</p>
+      </div>
+    </header>
+
+    <section class="board" aria-label="Task board">
+      <form class="add" id="addForm" autocomplete="off">
+        <input id="taskInput" type="text" placeholder="What needs doing?" aria-label="New task" maxlength="200">
+        <button type="submit" aria-label="Add task">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          Add
+        </button>
+      </form>
+
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filter tasks">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="active" aria-pressed="false">Active</button>
+          <button type="button" data-filter="completed" aria-pressed="false">Completed</button>
+        </div>
+        <div class="count" id="count" aria-live="polite"></div>
+      </div>
+
+      <ul class="list" id="list"></ul>
+
+      <div class="empty" id="empty">
+        <div class="face" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 8h16M4 12h16M4 16h10" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round"/><circle cx="18" cy="16" r="2.2" fill="#f5a623"/></svg>
+        </div>
+        <h2 id="emptyTitle">All clear</h2>
+        <p id="emptyText">Add a task above to get started.</p>
+      </div>
+
+      <div class="foot">
+        <span class="hint">Press <kbd>Enter</kbd> to add · <kbd>Tab</kbd> to move</span>
+        <button type="button" class="clear" id="clearBtn">Clear completed</button>
+      </div>
+    </section>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "taskboard.v1";
+  var state = { tasks: [], filter: "all" };
+
+  var form = document.getElementById("addForm");
+  var input = document.getElementById("taskInput");
+  var list = document.getElementById("list");
+  var countEl = document.getElementById("count");
+  var empty = document.getElementById("empty");
+  var emptyTitle = document.getElementById("emptyTitle");
+  var emptyText = document.getElementById("emptyText");
+  var clearBtn = document.getElementById("clearBtn");
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll(".filters button"));
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){
+        var data = JSON.parse(raw);
+        if(Array.isArray(data.tasks)) state.tasks = data.tasks;
+        if(data.filter) state.filter = data.filter;
+      }
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+  function esc(s){
+    return s.replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function visibleTasks(){
+    if(state.filter === "active") return state.tasks.filter(function(t){return !t.done;});
+    if(state.filter === "completed") return state.tasks.filter(function(t){return t.done;});
+    return state.tasks;
+  }
+
+  function render(){
+    var remaining = state.tasks.filter(function(t){return !t.done;}).length;
+    var total = state.tasks.length;
+
+    // count
+    if(total === 0){
+      countEl.textContent = "No tasks yet";
+    } else {
+      countEl.innerHTML = "<b>" + remaining + "</b> " + (remaining === 1 ? "task" : "tasks") + " left";
+    }
+
+    // filter buttons
+    filterBtns.forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.filter === state.filter ? "true" : "false");
+    });
+
+    // list
+    var items = visibleTasks();
+    list.innerHTML = "";
+    items.forEach(function(t){
+      var li = document.createElement("li");
+      li.className = "task" + (t.done ? " done" : "");
+      li.dataset.id = t.id;
+
+      var check = document.createElement("button");
+      check.type = "button";
+      check.className = "check";
+      check.setAttribute("aria-pressed", t.done ? "true" : "false");
+      check.setAttribute("aria-label", (t.done ? "Mark incomplete: " : "Mark complete: ") + t.text);
+      check.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+      check.addEventListener("click", function(){ toggle(t.id); });
+
+      var text = document.createElement("span");
+      text.className = "text";
+      text.textContent = t.text;
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "del";
+      del.setAttribute("aria-label", "Delete task: " + t.text);
+      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M6 7h12M9 7V5h6v2M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      del.addEventListener("click", function(){ remove(t.id); });
+
+      li.appendChild(check);
+      li.appendChild(text);
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+
+    // empty state
+    if(items.length === 0){
+      empty.classList.add("show");
+      if(total === 0){
+        emptyTitle.textContent = "All clear";
+        emptyText.textContent = "Add a task above to get started.";
+      } else if(state.filter === "active"){
+        emptyTitle.textContent = "Nothing left to do";
+        emptyText.textContent = "Every task is done. Nice work!";
+      } else {
+        emptyTitle.textContent = "No completed tasks yet";
+        emptyText.textContent = "Tick something off to see it here.";
+      }
+    } else {
+      empty.classList.remove("show");
+    }
+
+    clearBtn.style.visibility = state.tasks.some(function(t){return t.done;}) ? "visible" : "hidden";
+  }
+
+  function addTask(text){
+    text = text.trim();
+    if(!text) return;
+    state.tasks.unshift({ id: uid(), text: text, done: false });
+    save();
+    render();
+    input.focus();
+  }
+  function toggle(id){
+    var t = state.tasks.find(function(x){return x.id === id;});
+    if(t){ t.done = !t.done; save(); render(); }
+  }
+  function remove(id){
+    state.tasks = state.tasks.filter(function(x){return x.id !== id;});
+    save();
+    render();
+  }
+  function setFilter(f){
+    state.filter = f;
+    save();
+    render();
+  }
+  function clearCompleted(){
+    state.tasks = state.tasks.filter(function(t){return !t.done;});
+    save();
+    render();
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    addTask(input.value);
+    input.value = "";
+  });
+  filterBtns.forEach(function(b){
+    b.addEventListener("click", function(){ setFilter(b.dataset.filter); });
+  });
+  clearBtn.addEventListener("click", clearCompleted);
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>

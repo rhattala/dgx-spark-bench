@@ -1,0 +1,104 @@
+=== simple      pricing-table    run 1/3 ===
+  7451 tok in 191s (finish=stop), 21188 bytes
+  machine checks: 12/12
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/simple-pricing-table-run1.html
+
+=== simple      pricing-table    run 2/3 ===
+  7869 tok in 205s (finish=stop), 23177 bytes
+  machine checks: 11/12
+    FAIL focus_styles
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/simple-pricing-table-run2.html
+
+=== simple      pricing-table    run 3/3 ===
+  7427 tok in 187s (finish=stop), 21167 bytes
+  machine checks: 11/12
+    FAIL focus_styles
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/simple-pricing-table-run3.html
+
+=== medium      task-board       run 1/3 ===
+  5093 tok in 137s (finish=stop), 15127 bytes
+  machine checks: 14/15
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/medium-task-board-run1.html
+
+=== medium      task-board       run 2/3 ===
+  3874 tok in 110s (finish=stop), 11586 bytes
+  machine checks: 14/15
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/medium-task-board-run2.html
+
+=== medium      task-board       run 3/3 ===
+  5550 tok in 152s (finish=stop), 15963 bytes
+  machine checks: 14/15
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/medium-task-board-run3.html
+
+=== hard        sales-dashboard  run 1/3 ===
+  9366 tok in 270s (finish=stop), 25805 bytes
+  machine checks: 18/18
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/hard-sales-dashboard-run1.html
+
+=== hard        sales-dashboard  run 2/3 ===
+  9137 tok in 262s (finish=stop), 25387 bytes
+  machine checks: 18/18
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/hard-sales-dashboard-run2.html
+
+=== hard        sales-dashboard  run 3/3 ===
+  10382 tok in 298s (finish=stop), 29120 bytes
+  machine checks: 18/18
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/hard-sales-dashboard-run3.html
+
+=== extra-hard  kanban-board     run 1/3 ===
+  11248 tok in 305s (finish=stop), 34160 bytes
+  machine checks: 18/18
+  js syntax: INVALID — /private/var/folders/0f/dg1y3j396wd_rwdzcjw437rc0000gn/T/tmp5da63pqh.js:362
+  -> results/2026-08-16/qwen-repeat/extra-hard-kanban-board-run1.html
+
+=== extra-hard  kanban-board     run 2/3 ===
+  9408 tok in 250s (finish=stop), 29287 bytes
+  machine checks: 18/18
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/extra-hard-kanban-board-run2.html
+
+=== extra-hard  kanban-board     run 3/3 ===
+  9984 tok in 270s (finish=stop), 30624 bytes
+  machine checks: 18/18
+  js syntax: OK
+  -> results/2026-08-16/qwen-repeat/extra-hard-kanban-board-run3.html
+
+============================================================
+  simple pricing-table    checks 12/12  js=OK       7451tok   191s
+  simple pricing-table    checks 11/12  js=OK       7869tok   205s
+  simple pricing-table    checks 11/12  js=OK       7427tok   187s
+  medium task-board       checks 14/15  js=OK       5093tok   137s
+  medium task-board       checks 14/15  js=OK       3874tok   110s
+  medium task-board       checks 14/15  js=OK       5550tok   152s
+  hard   sales-dashboard  checks 18/18  js=OK       9366tok   270s
+  hard   sales-dashboard  checks 18/18  js=OK       9137tok   262s
+  hard   sales-dashboard  checks 18/18  js=OK      10382tok   298s
+  extra-hard kanban-board     checks 18/18  js=INVALID 11248tok   305s
+  extra-hard kanban-board     checks 18/18  js=OK       9408tok   250s
+  extra-hard kanban-board     checks 18/18  js=OK       9984tok   270s
+
+  ═══ SPREAD ACROSS 3 RUNS (this is why n=1 is not publishable) ═══
+  task             checks         tokens           seconds
+  pricing-table    11.3 (11-12)     7582 (7427-7869)    194 (187-205)
+  task-board       14.0 (14-14)     4839 (3874-5550)    133 (110-152)
+  sales-dashboard  18.0 (18-18)     9628 (9137-10382)    277 (262-298)
+  kanban-board     18.0 (18-18)    10213 (9408-11248)    275 (250-305)
+
+  Widest check spread on a single task: 1. Any claimed difference
+  SMALLER than that is inside the noise of this harness.
+
+  ⚠️ Machine checks are NECESSARY, NOT SUFFICIENT — a page can pass all of
+     them and still look terrible. Render them and look.
+  saved -> results/2026-08-16/qwen-repeat/results-qwen-uncapped-x3.json

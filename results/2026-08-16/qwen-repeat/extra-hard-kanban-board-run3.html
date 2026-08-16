@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowboard — Kanban</title>
+<style>
+:root{
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  --bg:#e9edf3; --bg-2:#f4f7fb; --surface:#ffffff; --surface-2:#f2f5f9;
+  --ink:#141a24; --ink-soft:#5a6473; --ink-faint:#98a2b3;
+  --line:#dde3ec; --line-2:#cdd5e1;
+  --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:rgba(15,118,110,.12);
+  --danger:#dc2626; --danger-soft:rgba(220,38,38,.12);
+  --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+  --shadow:0 10px 24px -12px rgba(16,24,40,.28);
+  --shadow-lg:0 24px 48px -18px rgba(16,24,40,.4);
+  --glow:rgba(15,118,110,.45);
+  --grid:rgba(16,24,40,.045);
+  --dot:rgba(16,24,40,.06);
+}
+[data-theme="light"]{
+  --bg:#e9edf3; --bg-2:#f4f7fb; --surface:#ffffff; --surface-2:#f2f5f9;
+  --ink:#141a24; --ink-soft:#5a6473; --ink-faint:#98a2b3;
+  --line:#dde3ec; --line-2:#cdd5e1;
+  --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:rgba(15,118,110,.12);
+  --danger:#dc2626; --danger-soft:rgba(220,38,38,.12);
+  --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+  --shadow:0 10px 24px -12px rgba(16,24,40,.28);
+  --shadow-lg:0 24px 48px -18px rgba(16,24,40,.4);
+  --glow:rgba(15,118,110,.45);
+  --grid:rgba(16,24,40,.045);
+  --dot:rgba(16,24,40,.06);
+}
+[data-theme="dark"]{
+  --bg:#0d1017; --bg-2:#12161f; --surface:#1a2029; --surface-2:#212a35;
+  --ink:#e9edf4; --ink-soft:#9aa4b2; --ink-faint:#5f6a7a;
+  --line:#2a3340; --line-2:#38434f;
+  --accent:#2dd4bf; --accent-ink:#04211d; --accent-soft:rgba(45,212,191,.14);
+  --danger:#f87171; --danger-soft:rgba(248,113,113,.14);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow:0 14px 30px -14px rgba(0,0,0,.7);
+  --shadow-lg:0 28px 56px -20px rgba(0,0,0,.8);
+  --glow:rgba(45,212,191,.4);
+  --grid:rgba(255,255,255,.035);
+  --dot:rgba(255,255,255,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--font-sans);
+  color:var(--ink);
+  background:var(--bg);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  transition:background .35s ease, color .35s ease;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1100px 520px at 82% -8%, var(--accent-soft), transparent 60%),
+    radial-gradient(900px 480px at -6% 108%, var(--accent-soft), transparent 55%);
+  opacity:.9;
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:34px 34px;
+  -webkit-mask-image:radial-gradient(circle at 50% 24%, #000 0%, transparent 78%);
+  mask-image:radial-gradient(circle at 50% 24%, #000 0%, transparent 78%);
+}
+.app{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:22px 20px 40px}
+
+/* ---------- Header ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:14px}
+.mark{width:46px;height:46px;flex:none;filter:drop-shadow(0 6px 14px var(--glow))}
+.mark .bar{transform-origin:bottom;animation:grow .7s cubic-bezier(.2,.8,.2,1) both}
+.mark .bar:nth-child(1){animation-delay:.05s}
+.mark .bar:nth-child(2){animation-delay:.15s}
+.mark .bar:nth-child(3){animation-delay:.25s}
+@keyframes grow{from{transform:scaleY(.2);opacity:0}to{transform:scaleY(1);opacity:1}}
+.brand h1{font-size:26px;font-weight:800;letter-spacing:-.03em;margin:0;line-height:1}
+.brand .sub{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+.search{position:relative;display:flex;align-items:center}
+.search svg{position:absolute;left:11px;width:16px;height:16px;color:var(--ink-faint);pointer-events:none}
+.search input{
+  width:230px;max-width:52vw;padding:10px 34px 10px 34px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font:inherit;font-size:14px;transition:border-color .2s, box-shadow .2s, width .25s;
+}
+.search input::placeholder{color:var(--ink-faint)}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.search .clear{position:absolute;right:6px;width:22px;height:22px;border:none;border-radius:50%;
+  background:var(--surface-2);color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1;
+  display:none;align-items:center;justify-content:center}
+.search .clear:hover{color:var(--ink)}
+.search.has-value .clear{display:flex}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 15px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:14px;
+  font-weight:600;cursor:pointer;transition:transform .15s, box-shadow .2s, background .2s, border-color .2s, opacity .2s}
+.btn svg{width:16px;height:16px}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);border-color:var(--line-2)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 8px 18px -8px var(--glow)}
+.btn.primary:hover{box-shadow:0 12px 24px -8px var(--glow)}
+.btn.icon{padding:10px}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- Board ---------- */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+.column{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:14px;display:flex;flex-direction:column;gap:12px;min-height:220px;
+  transition:background .2s, border-color .2s, box-shadow .2s;
+}
+.column.drag-over{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 4px var(--accent-soft)}
+.col-head{display:flex;align-items:center;gap:10px;padding:2px 4px}
+.col-dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 4px var(--accent-soft)}
+.col-title{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.col-count{margin-left:auto;font-family:var(--font-mono);font-size:12px;font-weight:700;
+  min-width:26px;text-align:center;padding:3px 8px;border-radius:999px;
+  background:var(--surface-2);color:var(--ink-soft);border:1px solid var(--line)}
+.col-count.bump{animation:bump .4s ease}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.35);color:var(--accent)}100%{transform:scale(1)}}
+.col-list{display:flex;flex-direction:column;gap:10px;min-height:60px}
+
+/* ---------- Card ---------- */
+.card{
+  position:relative;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:12px;padding:12px 12px 12px 16px;cursor:grab;
+  box-shadow:var(--shadow-sm);transition:transform .18s, box-shadow .2s, border-color .2s, opacity .2s;
+}
+.card::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:4px;background:var(--accent)}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-2)}
+.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px;box-shadow:var(--shadow)}
+.card.dragging{opacity:.4;transform:scale(.98) rotate(-1deg);cursor:grabbing}
+.card.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft), var(--shadow)}
+.card.selected::before{box-shadow:0 0 10px var(--glow)}
+.card-title{font-size:14.5px;font-weight:600;line-height:1.4;word-break:break-word;padding-right:4px}
+.card-meta{display:flex;align-items:center;gap:8px;margin-top:9px;font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.04em;color:var(--ink-faint)}
+.card-meta .tag{padding:2px 7px;border-radius:6px;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft)}
+.card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transform:translateY(-2px);
+  transition:opacity .18s, transform .18s}
+.card:hover .card-actions,.card:focus-within .card-actions,.card.selected .card-actions{opacity:1;transform:none}
+.iconbtn{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s, color .15s, transform .15s}
+.iconbtn svg{width:14px;height:14px}
+.iconbtn:hover{color:var(--ink);background:var(--surface-2);transform:translateY(-1px)}
+.iconbtn.danger:hover{color:var(--danger);background:var(--danger-soft);border-color:transparent}
+.iconbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---------- Inline edit ---------- */
+.card-edit{width:100%}
+.card-edit input{width:100%;font:inherit;font-size:14.5px;font-weight:600;color:var(--ink);
+  background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:7px 9px;
+  box-shadow:0 0 0 3px var(--accent-soft)}
+.card-edit input:focus{outline:none}
+
+/* ---------- Drop indicator ---------- */
+.drop-indicator{height:4px;border-radius:4px;background:var(--accent);margin:2px 0;
+  box-shadow:0 0 0 3px var(--accent-soft), 0 0 12px var(--glow);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* ---------- Empty / no results ---------- */
+.empty{border:1.5px dashed var(--line-2);border-radius:12px;padding:22px 14px;text-align:center;
+  color:var(--ink-faint);font-size:13px;font-weight:500}
+.empty.drop-hint{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:50;
+  background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:11px;font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;max-width:88vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Footer ---------- */
+.foot{margin-top:26px;display:flex;flex-direction:column;gap:10px}
+.legend{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);letter-spacing:.02em;line-height:2}
+.legend kbd{font-family:var(--font-mono);font-size:10.5px;background:var(--surface);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:5px;padding:2px 6px;color:var(--ink-soft);margin:0 1px}
+.foot .note{font-size:11px;color:var(--ink-faint);font-family:var(--font-mono)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .board{grid-template-columns:1fr}
+  .column{min-height:auto}
+  .col-list{max-height:340px;overflow:auto}
+}
+@media (max-width:520px){
+  .app{padding:16px 14px 32px}
+  .brand h1{font-size:22px}
+  .search input{width:100%}
+  .tools{width:100%}
+  .search{flex:1}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 46 46" aria-hidden="true">
+        <rect class="bar" x="6"  y="14" width="9" height="26" rx="3" fill="var(--accent)"/>
+        <rect class="bar" x="18.5" y="6"  width="9" height="34" rx="3" fill="var(--accent)" opacity=".72"/>
+        <rect class="bar" x="31" y="20" width="9" height="20" rx="3" fill="var(--accent)" opacity=".45"/>
+      </svg>
+      <div>
+        <h1>Flowboard</h1>
+        <div class="sub">Kanban · native · no deps</div>
+      </div>
+    </div>
+    <div class="tools">
+      <div class="search" id="searchWrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" type="search" placeholder="Search cards…" aria-label="Search cards" autocomplete="off">
+        <button class="clear" id="searchClear" aria-label="Clear search">×</button>
+      </div>
+      <button class="btn" id="undoBtn" disabled aria-label="Undo last action">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>
+        Undo
+      </button>
+      <button class="btn icon" id="themeBtn" aria-label="Toggle theme" aria-pressed="false">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="board" id="board" aria-label="Kanban board"></main>
+
+  <footer class="foot">
+    <div class="legend">
+      <kbd>Tab</kbd> focus a card · <kbd>←</kbd><kbd>→</kbd> move between columns ·
+      <kbd>Enter</kbd> edit · <kbd>Esc</kbd> cancel · <kbd>Del</kbd> delete · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo
+    </div>
+    <div class="note">Everything is saved locally in your browser — reload and it's still here.</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Constants ---------- */
+  var STORAGE_KEY = "flowboard.v1";
+  var THEME_KEY   = "flowboard.theme";
+  var COLUMNS = [
+    {id:"todo",       title:"To Do",       color:"#f59e0b"},
+    {id:"inprogress", title:"In Progress", color:"#3b82f6"},
+    {id:"done",       title:"Done",        color:"#22c55e"}
+  ];
+  var COL_INDEX = {todo:0, inprogress:1, done:2};
+
+  var ICONS = {
+    sun:'<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+    edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    trash:'<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>'
+  };
+
+  /* ---------- State ---------- */
+  var state = { cards: [] };
+  var history = [];
+  var selectedId = null;
+  var query = "";
+  var theme = "dark";
+
+  /* ---------- DOM refs ---------- */
+  var boardEl   = document.getElementById("board");
+  var undoBtn   = document.getElementById("undoBtn");
+  var themeBtn  = document.getElementById("themeBtn");
+  var themeIcon = document.getElementById("themeIcon");
+  var searchEl  = document.getElementById("search");
+  var searchWrap= document.getElementById("searchWrap");
+  var searchClear = document.getElementById("searchClear");
+  var toastEl   = document.getElementById("toast");
+
+  var colEls = {};   // id -> {list, count, el}
+
+  /* ---------- Utils ---------- */
+  function uid(){ return "c" + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-3); }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function colTitle(id){ for(var i=0;i<COLUMNS.length;i++) if(COLUMNS[i].id===id) return COLUMNS[i].title; return id; }
+  function findCard(id){ for(var i=0;i<state.cards.length;i++) if(state.cards[i].id===id) return state.cards[i]; return null; }
+  function matches(card){
+    if(!query) return true;
+    return card.title.toLowerCase().indexOf(query) !== -1;
+  }
+  function visibleCards(colId){
+    return state.cards.filter(function(c){ return c.column===colId && matches(c); });
+  }
+
+  /* ---------- Persistence ---------- */
+  function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){ var p = JSON.parse(raw); if(p && Array.isArray(p.cards)) state.cards = p.cards; }
+    }catch(e){}
+    if(!state.cards.length) seed();
+  }
+  function seed(){
+    var now = Date.now();
+    state.cards = [
+      {id:uid(), title:"Draft the Q3 product roadmap", column:"todo",       created:now-86400000*3},
+      {id:uid(), title:"Fix login redirect loop on Safari", column:"todo",  created:now-86400000*2},
+      {id:uid(), title:"Write onboarding email sequence", column:"todo",    created:now-86400000},
+      {id:uid(), title:"Refactor the billing service", column:"inprogress", created:now-86400000*4},
+      {id:uid(), title:"Design the new dashboard layout", column:"inprogress", created:now-86400000*2},
+      {id:uid(), title:"Ship dark mode to all users", column:"done",        created:now-86400000*6}
+    ];
+    save();
+  }
+
+  /* ---------- History / Undo ---------- */
+  function pushHistory(action){
+    history.push(action);
+    if(history.length > 100) history.shift();
+    updateUndo();
+  }
+  function updateUndo(){ undoBtn.disabled = history.length === 0; }
+
+  function undo(){
+    var a = history.pop();
+    if(!a) return;
+    switch(a.type){
+      case "add":
+        state.cards = state.cards.filter(function(c){ return c.id !== a.id; });
+        break;
+      case "delete":
+        state.cards.splice(a.index, 0, a.card);
+        break;
+      case "move":
+        state.cards.splice(a.fromIndex, 1);
+        state.cards.splice(a.toIndex, 0, a.card);
+        break;
+      case "edit":
+        var c = findCard(a.id); if(c) c.title = a.prev;
+        break;
+    }
+    if(selectedId && !findCard(selectedId)) selectedId = null;
+    history.push(a); // re-record so undo can be undone
+    save(); render();
+    toast("Undid: " + describe(a));
+  }
+  function describe(a){
+    switch(a.type){
+      case "add":    return "add card";
+      case "delete": return "delete card";
+      case "move":   return "move card";
+      case "edit":   return "edit card";
+    }
+    return "action";
+  }
+
+  /* ---------- Actions ---------- */
+  function addCard(title, column){
+    var card = {id:uid(), title:title, column:column, created:Date.now()};
+    state.cards.push(card);
+    pushHistory({type:"add", id:card.id});
+    save(); render();
+    toast("Added card");
+    return card;
+  }
+  function deleteCard(id){
+    var idx = -1;
+    for(var i=0;i<state.cards.length;i++) if(state.cards[i].id===id){ idx=i; break; }
+    if(idx<0) return;
+    var card = state.cards[idx];
+    state.cards.splice(idx,1);
+    pushHistory({type:"delete", card:card, index:idx});
+    if(selectedId===id) selectedId=null;
+    save(); render();
+    toast("Deleted card");
+  }
+  function editCard(id, newTitle){
+    var c = findCard(id); if(!c) return;
+    newTitle = newTitle.trim();
+    if(!newTitle || newTitle === c.title){ render(); return; }
+    var prev = c.title;
+    c.title = newTitle;
+    pushHistory({type:"edit", id:id, prev:prev});
+    save(); render();
+    toast("Edited card");
+  }
+  function moveCard(id, toColumn, toIndex){
+    var fromIndex = -1;
+    for(var i=0;i<state.cards.length;i++) if(state.cards[i].id===id){ fromIndex=i; break; }
+    if(fromIndex<0) return;
+    var card = state.cards[fromIndex];
+    var toIndexAdj = toIndex;
+    if(fromIndex < toIndexAdj) toIndexAdj = toIndexAdj - 1;
+    state.cards.splice(fromIndex,1);
+    state.cards.splice(toIndexAdj,0,card);
+    card.column = toColumn;
+    pushHistory({type:"move", card:card, fromIndex:fromIndex, toIndex:toIndexAdj});
+    save(); render();
+  }
+
+  /* ---------- Rendering ---------- */
+  function buildBoard(){
+    boardEl.innerHTML = "";
+    COLUMNS.forEach(function(col){
+      var section = document.createElement("section");
+      section.className = "column";
+      section.dataset.col = col.id;
+      section.setAttribute("aria-label", col.title + " column");
+      section.innerHTML =
+        '<div class="col-head">' +
+          '<span class="col-dot" style="background:'+col.color+'"></span>' +
+          '<span class="col-title">'+col.title+'</span>' +
+          '<span class="col-count" aria-label="card count">0</span>' +
+        '</div>' +
+        '<div class="col-list" role="list"></div>';
+      boardEl.appendChild(section);
+      colEls[col.id] = {
+        el: section,
+        list: section.querySelector(".col-list"),
+        count: section.querySelector(".col-count")
+      };
+      wireColumn(section, col.id);
+    });
+  }
+
+  function render(){
+    COLUMNS.forEach(function(col){
+      var info = colEls[col.id];
+      var cards = visibleCards(col.id);
+      info.list.innerHTML = "";
+      if(cards.length === 0){
+        var empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = query ? "No matches" : "Drop cards here";
+        info.list.appendChild(empty);
+      } else {
+        cards.forEach(function(card){ info.list.appendChild(buildCard(card)); });
+      }
+      setCount(col.id, cards.length);
+    });
+    updateUndo();
+  }
+
+  function setCount(colId, n){
+    var el = colEls[colId].count;
+    if(el.textContent !== String(n)){
+      el.textContent = n;
+      el.classList.remove("bump");
+      void el.offsetWidth;
+      el.classList.add("bump");
+    }
+  }
+
+  function buildCard(card){
+    var el = document.createElement("article");
+    el.className = "card";
+    el.dataset.id = card.id;
+    el.draggable = true;
+    el.tabIndex = 0;
+    el.setAttribute("role","listitem");
+    el.setAttribute("aria-label", card.title + ", in " + colTitle(card.column));
+    el.innerHTML =
+      '<div class="card-title">'+esc(card.title)+'</div>' +
+      '<div class="card-meta"><span class="tag">'+colTitle(card.column)+'</span><span>'+timeAgo(card.created)+'</span></div>' +
+      '<div class="card-actions">' +
+        '<button class="iconbtn" data-act="left"  aria-label="Move left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+        '<button class="iconbtn" data-act="right" aria-label="Move right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>' +
+        '<button class="iconbtn" data-act="edit"  aria-label="Edit card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS.edit+'</svg></button>' +
+        '<button class="iconbtn danger" data-act="delete" aria-label="Delete card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS.trash+'</svg></button>' +
+      '</div>';
+
+    // drag
+    el.addEventListener("dragstart", function(e){
+      e.dataTransfer.effectAllowed = "move";
+      try{ e.dataTransfer.setData("text/plain", card.id); }catch(err){}
+      el.classList.add("dragging");
+      selectedId = card.id;
+    });
+    el.addEventListener("dragend", function(){
+      el.classList.remove("dragging");
+      clearIndicators();
+    });
+
+    // keyboard
+    el.addEventListener("keydown", function(e){ onCardKey(e, card.id); });
+
+    // double-click to edit
+    el.addEventListener("dblclick", function(e){
+      if(e.target.closest(".card-actions")) return;
+      startEdit(card.id);
+    });
+
+    // click to select
+    el.addEventListener("click", function(e){
+      if(e.target.closest(".card-actions")) return;
+      selectCard(card.id);
+    });
+
+    // action buttons
+    el.querySelector('[data-act="left"]').addEventListener("click", function(){ moveLeft(card.id); });
+    el.querySelector('[data-act="right"]').addEventListener("click", function(){ moveRight(card.id); });
+    el.querySelector('[data-act="edit"]').addEventListener("click", function(){ startEdit(card.id); });
+    el.querySelector('[data-act="delete"]').addEventListener("click", function(){ deleteCard(card.id); });
+
+    return el;
+  }
+
+  /* ---------- Selection ---------- */
+  function selectCard(id){
+    selectedId = id;
+    document.querySelectorAll(".card.selected").forEach(function(n){ n.classList.remove("selected"); });
+    var node = document.querySelector('.card[data-id="'+id+'"]');
+    if(node){ node.classList.add("selected"); }
+  }
+  function deselect(){
+    selectedId = null;
+    document.querySelectorAll(".card.selected").forEach(function(n){ n.classList.remove("selected"); });
+  }
+
+  /* ---------- Keyboard move ---------- */
+  function onCardKey(e, id){
+    var c = findCard(id); if(!c) return;
+    switch(e.key){
+      case "ArrowLeft":  e.preventDefault(); moveLeft(id); break;
+      case "ArrowRight": e.preventDefault(); moveRight(id); break;
+      case "Enter":      e.preventDefault(); startEdit(id); break;
+      case "Delete":
+      case "Backspace":  e.preventDefault(); deleteCard(id); break;
+      case "Escape":     deselect(); break;
+    }
+  }
+  function moveLeft(id){
+    var c = findCard(id); if(!c) return;
+    var idx = COL_INDEX[c.column];
+    if(idx>0){ selectCard(id); moveCard(id, COLUMNS[idx-1].id, 0); }
+    else toast("Already in the first column");
+  }
+  function moveRight(id){
+    var c = findCard(id); if(!c) return;
+    var idx = COL_INDEX[c.column];
+    if(idx<COLUMNS.length-1){ selectCard(id); moveCard(id, COLUMNS[idx+1].id, 0); }
+    else toast("Already in the last column");
+  }
+
+  /* ---------- Inline edit ---------- */
+  function startEdit(id){
+    var node = document.querySelector('.card[data-id="'+id+'"]');
+    if(!node) return;
+    var c = findCard(id); if(!c) return;
+    var titleEl = node.querySelector(".card-title");
+    var wrap = document.createElement("div");
+    wrap.className = "card-edit";
+    var input = document.createElement("input");
+    input.type = "text";
+    input.value = c.title;
+    input.setAttribute("aria-label","Edit card title");
+    wrap.appendChild(input);
+    titleEl.replaceWith(wrap);
+    input.focus();
+    input.select();
+
+    var done = false;
+    function commit(){
+      if(done) return; done = true;
+      var v = input.value;
+      editCard(id, v);
+    }
+    function cancel(){
+      if(done) return; done = true;
+      render();
+    }
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); commit(); }
+      else if(e.key === "Escape"){ e.preventDefault(); cancel(); }
+    });
+    input.addEventListener("blur", commit);
+  }
+
+  /* ---------- Drag & drop on columns ---------- */
+  function wireColumn(section, colId){
+    section.addEventListener("dragover", function(e){
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      section.classList.add("drag-over");
+      var y = e.clientY;
+      var after = getAfterCard(colId, y);
+      showIndicator(colId, after);
+    });
+    section.addEventListener("dragleave", function(e){
+      if(!section.contains(e.relatedTarget)){
+        section.classList.remove("drag-over");
+        clearIndicators();
+      }
+    });
+    section.addEventListener("drop", function(e){
+      e.preventDefault();
+      var id = null;
+      try{ id = e.dataTransfer.getData("text/plain"); }catch(err){}
+      if(!id) id = selectedId;
+      var y = e.clientY;
+      var after = getAfterCard(colId, y);
+      var toIndex = after ? afterIndex(colId, after) : visibleCards(colId).length;
+      clearIndicators();
+      section.classList.remove("drag-over");
+      if(id) moveCard(id, colId, toIndex);
+    });
+  }
+  function getAfterCard(colId, y){
+    var cards = Array.prototype.slice.call(colEls[colId].list.querySelectorAll(".card:not(.dragging)"));
+    var closest = {offset:-Infinity, el:null};
+    cards.forEach(function(card){
+      var box = card.getBoundingClientRect();
+      var offset = y - box.top - box.height/2;
+      if(offset < 0 && offset > closest.offset){ closest = {offset:offset, el:card}; }
+    });
+    return closest.el;
+  }
+  function afterIndex(colId, cardEl){
+    var cards = Array.prototype.slice.call(colEls[colId].list.querySelectorAll(".card:not(.dragging)"));
+    return cards.indexOf(cardEl);
+  }
+  function showIndicator(colId, afterEl){
+    clearIndicators();
+    var ind = document.createElement("div");
+    ind.className = "drop-indicator";
+    var list = colEls[colId].list;
+    if(afterEl){ list.insertBefore(ind, afterEl); }
+    else {
+      var empty = list.querySelector(".empty");
+      if(empty) list.insertBefore(ind, empty); else list.appendChild(ind);
+    }
+  }
+  function clearIndicators(){
+    document.querySelectorAll(".drop-indicator").forEach(function(n){ n.remove(); });
+    document.querySelectorAll(".column.drag-over").forEach(function(n){ n.classList.remove("drag-over"); });
+  }
+
+  /* ---------- Theme ---------- */
+  function applyTheme(t){
+    theme = t;
+    document.documentElement.setAttribute("data-theme", t);
+    themeIcon.innerHTML = t === "dark" ? ICONS.sun : ICONS.moon;
+    themeBtn.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
+    try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+  }
+  function toggleTheme(){ applyTheme(theme === "dark" ? "light" : "dark"); }
+
+  /* ---------- Search ---------- */
+  function onSearch(){
+    query = searchEl.value.trim().toLowerCase();
+    searchWrap.classList.toggle("has-value", query.length > 0);
+    render();
+  }
+
+  /* ---------- Toast ---------- */
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1600);
+  }
+
+  /* ---------- Time ---------- */
+  function timeAgo(ts){
+    var s = Math.floor((Date.now()-ts)/1000);
+    if(s < 60) return "just now";
+    var m = Math.floor(s/60); if(m < 60) return m + "m ago";
+    var h = Math.floor(m/60); if(h < 24) return h + "h ago";
+    var d = Math.floor(h/24); if(d < 7) return d + "d ago";
+    return new Date(ts).toLocaleDateString();
+  }
+
+  /* ---------- Global keys ---------- */
+  document.addEventListener("keydown", function(e){
+    var typing = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
+    if((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z")){
+      if(typing) return;
+      e.preventDefault(); undo();
+    }
+  });
+
+  /* ---------- Wire controls ---------- */
+  undoBtn.addEventListener("click", undo);
+  themeBtn.addEventListener("click", toggleTheme);
+  searchEl.addEventListener("input", onSearch);
+  searchClear.addEventListener("click", function(){ searchEl.value=""; onSearch(); searchEl.focus(); });
+
+  /* ---------- Init ---------- */
+  load();
+  buildBoard();
+  applyTheme((function(){ try{ return localStorage.getItem(THEME_KEY) || "dark"; }catch(e){ return "dark"; } })());
+  render();
+})();
+</script>
+</body>
+</html>
