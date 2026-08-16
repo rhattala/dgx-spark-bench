@@ -1,0 +1,200 @@
+{
+ "label": "deepseek-0731-uncapped",
+ "base": "http://spark-1:8888",
+ "model": "deepseek-v4-flash-dspark",
+ "wall": 185.6,
+ "passed": 25,
+ "failed": 2,
+ "unverified": 0,
+ "checks": [
+  {
+   "name": "http_200",
+   "ok": true,
+   "unverified": false,
+   "detail": "code=200",
+   "category": "api"
+  },
+  {
+   "name": "has_choices",
+   "ok": true,
+   "unverified": false,
+   "detail": "n=1",
+   "category": "api"
+  },
+  {
+   "name": "has_usage_fields",
+   "ok": true,
+   "unverified": false,
+   "detail": "{'prompt_tokens': 6, 'total_tokens': 8, 'completion_tokens': 2, 'prompt_tokens_details': None}",
+   "category": "api"
+  },
+  {
+   "name": "usage_arithmetic",
+   "ok": true,
+   "unverified": false,
+   "detail": "total == prompt + completion",
+   "category": "api"
+  },
+  {
+   "name": "finish_reason_valid",
+   "ok": true,
+   "unverified": false,
+   "detail": "stop",
+   "category": "api"
+  },
+  {
+   "name": "object_type",
+   "ok": true,
+   "unverified": false,
+   "detail": "chat.completion",
+   "category": "api"
+  },
+  {
+   "name": "max_tokens_respected",
+   "ok": true,
+   "unverified": false,
+   "detail": "completion_tokens=24 (cap 24)",
+   "category": "api"
+  },
+  {
+   "name": "truncation_reports_length",
+   "ok": true,
+   "unverified": false,
+   "detail": "length",
+   "category": "api"
+  },
+  {
+   "name": "stream_multiple_chunks",
+   "ok": true,
+   "unverified": false,
+   "detail": "4 data chunks",
+   "category": "api"
+  },
+  {
+   "name": "stream_terminates_with_DONE",
+   "ok": true,
+   "unverified": false,
+   "detail": "saw [DONE]=True",
+   "category": "api"
+  },
+  {
+   "name": "stream_ttfb_reasonable",
+   "ok": true,
+   "unverified": false,
+   "detail": "first chunk 0.17s",
+   "category": "api"
+  },
+  {
+   "name": "tool_call_emitted",
+   "ok": true,
+   "unverified": false,
+   "detail": "1 tool_calls",
+   "category": "api"
+  },
+  {
+   "name": "tool_name_correct",
+   "ok": true,
+   "unverified": false,
+   "detail": "get_weather",
+   "category": "api"
+  },
+  {
+   "name": "tool_args_valid_json",
+   "ok": true,
+   "unverified": false,
+   "detail": "{\"city\": \"Paris\"}",
+   "category": "api"
+  },
+  {
+   "name": "tool_args_has_city",
+   "ok": true,
+   "unverified": false,
+   "detail": "{'city': 'Paris'}",
+   "category": "api"
+  },
+  {
+   "name": "tool_finish_reason",
+   "ok": true,
+   "unverified": false,
+   "detail": "tool_calls",
+   "category": "api"
+  },
+  {
+   "name": "unknown_model_rejected",
+   "ok": true,
+   "unverified": false,
+   "detail": "code=404",
+   "category": "errors"
+  },
+  {
+   "name": "missing_messages_rejected",
+   "ok": true,
+   "unverified": false,
+   "detail": "code=400",
+   "category": "errors"
+  },
+  {
+   "name": "negative_max_tokens_rejected",
+   "ok": true,
+   "unverified": false,
+   "detail": "code=400",
+   "category": "errors"
+  },
+  {
+   "name": "absurd_temperature_rejected",
+   "ok": false,
+   "unverified": false,
+   "detail": "code=0",
+   "category": "errors"
+  },
+  {
+   "name": "temp0_identical_x3",
+   "ok": false,
+   "unverified": false,
+   "detail": "3 distinct outputs (spec decoding makes this expected to vary)",
+   "category": "determinism"
+  },
+  {
+   "name": "metrics_readable",
+   "ok": true,
+   "unverified": false,
+   "detail": "success_total=431",
+   "category": "api"
+  },
+  {
+   "name": "provenance_counter_moves",
+   "ok": true,
+   "unverified": false,
+   "detail": "430 -> 431 (proves the request reached THIS engine)",
+   "category": "api"
+  },
+  {
+   "name": "open_route_v1_models",
+   "ok": true,
+   "unverified": false,
+   "detail": "HTTP 200 (unauthenticated)",
+   "category": "security"
+  },
+  {
+   "name": "open_route_health",
+   "ok": true,
+   "unverified": false,
+   "detail": "HTTP 200 (unauthenticated)",
+   "category": "security"
+  },
+  {
+   "name": "open_route_metrics",
+   "ok": true,
+   "unverified": false,
+   "detail": "HTTP 200 (unauthenticated)",
+   "category": "security"
+  },
+  {
+   "name": "invocations_unauthenticated_inference",
+   "ok": true,
+   "unverified": false,
+   "detail": "HTTP 200 \u2014 FULL INFERENCE WITH NO KEY (documented in this deployment)",
+   "category": "security"
+  }
+ ]
+}

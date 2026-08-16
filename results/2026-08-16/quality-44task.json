@@ -1,0 +1,391 @@
+{
+ "rows": [
+  {
+   "cat": "num1",
+   "name": "bat_ball",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 5,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "widgets",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "lilypad",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "sheep",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "socks",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "mult",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "order",
+   "pass": true,
+   "secs": 0.4,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "pow",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 3,
+   "finish": "stop"
+  },
+  {
+   "cat": "num1",
+   "name": "pct",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num2",
+   "name": "bird",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num2",
+   "name": "clock",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num2",
+   "name": "painters",
+   "pass": true,
+   "secs": 0.4,
+   "ctok": 8,
+   "finish": "stop"
+  },
+  {
+   "cat": "num2",
+   "name": "handshake",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num2",
+   "name": "wine",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num2",
+   "name": "ages",
+   "pass": true,
+   "secs": 2.1,
+   "ctok": 128,
+   "finish": "stop"
+  },
+  {
+   "cat": "num3",
+   "name": "lockers",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num3",
+   "name": "eggs",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num3",
+   "name": "horses",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num3",
+   "name": "josephus",
+   "pass": false,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "num3",
+   "name": "sum7",
+   "pass": true,
+   "secs": 4.9,
+   "ctok": 326,
+   "finish": "stop"
+  },
+  {
+   "cat": "num3",
+   "name": "weigh",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "format",
+   "name": "one_word",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 3,
+   "finish": "stop"
+  },
+  {
+   "cat": "format",
+   "name": "three_csv",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 6,
+   "finish": "stop"
+  },
+  {
+   "cat": "format",
+   "name": "json_only",
+   "pass": true,
+   "secs": 0.5,
+   "ctok": 18,
+   "finish": "stop"
+  },
+  {
+   "cat": "format",
+   "name": "no_yapping",
+   "pass": true,
+   "secs": 0.3,
+   "ctok": 2,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "reverse",
+   "pass": true,
+   "secs": 0.4,
+   "ctok": 15,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "fizzbuzz",
+   "pass": true,
+   "secs": 1.4,
+   "ctok": 98,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "bsearch",
+   "pass": true,
+   "secs": 1.2,
+   "ctok": 88,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "parens",
+   "pass": true,
+   "secs": 1.2,
+   "ctok": 80,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "lru",
+   "pass": true,
+   "secs": 2.0,
+   "ctok": 146,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "dedupe",
+   "pass": true,
+   "secs": 0.8,
+   "ctok": 48,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "merge_iv",
+   "pass": true,
+   "secs": 1.9,
+   "ctok": 123,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "edit_dist",
+   "pass": true,
+   "secs": 2.5,
+   "ctok": 192,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "valid_bst",
+   "pass": true,
+   "secs": 1.4,
+   "ctok": 89,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "lcs",
+   "pass": true,
+   "secs": 1.9,
+   "ctok": 144,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "spiral",
+   "pass": true,
+   "secs": 2.8,
+   "ctok": 222,
+   "finish": "stop"
+  },
+  {
+   "cat": "code",
+   "name": "debug",
+   "pass": true,
+   "secs": 0.7,
+   "ctok": 38,
+   "finish": "stop"
+  },
+  {
+   "cat": "agent",
+   "name": "sel_read",
+   "pass": true,
+   "secs": 1.0,
+   "ctok": 46,
+   "finish": "tool_calls"
+  },
+  {
+   "cat": "agent",
+   "name": "sel_search",
+   "pass": true,
+   "secs": 0.9,
+   "ctok": 46,
+   "finish": "tool_calls"
+  },
+  {
+   "cat": "agent",
+   "name": "sel_tests",
+   "pass": true,
+   "secs": 0.7,
+   "ctok": 29,
+   "finish": "tool_calls"
+  },
+  {
+   "cat": "agent",
+   "name": "sel_write",
+   "pass": true,
+   "secs": 1.1,
+   "ctok": 62,
+   "finish": "tool_calls"
+  },
+  {
+   "cat": "agent",
+   "name": "sel_typed",
+   "pass": true,
+   "secs": 1.1,
+   "ctok": 61,
+   "finish": "tool_calls"
+  },
+  {
+   "cat": "agent",
+   "name": "restraint1",
+   "pass": true,
+   "secs": 0.8,
+   "ctok": 22,
+   "finish": "stop"
+  },
+  {
+   "cat": "agent",
+   "name": "restraint2",
+   "pass": false,
+   "secs": 0.9,
+   "ctok": 44,
+   "finish": "tool_calls"
+  }
+ ],
+ "passed": 35,
+ "total": 44,
+ "pct": 79.5,
+ "by_cat": {
+  "num1": [
+   7,
+   9
+  ],
+  "num2": [
+   3,
+   6
+  ],
+  "num3": [
+   3,
+   6
+  ],
+  "format": [
+   4,
+   4
+  ],
+  "code": [
+   12,
+   12
+  ],
+  "agent": [
+   6,
+   7
+  ]
+ },
+ "label": "deepseek-uncapped",
+ "model": "deepseek-v4-flash-dspark",
+ "reasoning": "",
+ "max_tokens": 3000,
+ "repeat": 3,
+ "wall": 44.9
+}

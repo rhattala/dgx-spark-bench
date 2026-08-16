@@ -1,0 +1,3 @@
+doohickey qty=5 revenue=6.00
+gadget qty=2 revenue=20.00
+widget qty=4 revenue=10.00

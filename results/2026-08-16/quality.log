@@ -1,0 +1,65 @@
+=== SELF-TEST: the harness must be able to FAIL ===
+  has_number('10 cents',0.05)                    got=False want=False ok
+  has_number('5 cents',0.05)                     got=True  want=True  ok
+  has_number('5.333',5.33)                       got=True  want=True  ok
+  has_number('392',391)                          got=False want=False ok
+  has_number('70337',70336)                      got=False want=False ok
+  run_code(BROKEN)                               got=False want=False ok
+  run_code(CORRECT)                              got=True  want=True  ok
+  run_code(SYNTAX)                               got=False want=False ok
+  debug asserts reject original buggy impl       got=False want=False ok
+  one_word('BLUE')                               got=True  want=True  ok
+  one_word('blue.')                              got=False want=False ok
+  json_only(count=41)                            got=False want=False ok
+
+  HARNESS TRUSTWORTHY
+
+=== deepseek-uncapped | model=deepseek-v4-flash-dspark reasoning= max_tokens=3000 repeat=3 ===
+  num1    bat_ball    PASS    0.3s     5tok 
+  num1    widgets     PASS    0.3s     2tok 
+  num1    lilypad     FAIL    0.3s     2tok '48'
+  num1    sheep       PASS    0.3s     2tok 
+  num1    socks       FAIL    0.3s     2tok '5'
+  num1    mult        PASS    0.3s     2tok 
+  num1    order       PASS    0.4s     2tok 
+  num1    pow         PASS    0.3s     3tok 
+  num1    pct         PASS    0.3s     2tok 
+  num2    bird        PASS    0.3s     2tok 
+  num2    clock       FAIL    0.3s     2tok '12'
+  num2    painters    PASS    0.4s     8tok 
+  num2    handshake   FAIL    0.3s     2tok '66'
+  num2    wine        FAIL    0.3s     2tok '5'
+  num2    ages        PASS    2.1s   128tok 
+  num3    lockers     FAIL    0.3s     2tok '100'
+  num3    eggs        PASS    0.3s     2tok 
+  num3    horses      FAIL    0.3s     2tok '25'
+  num3    josephus    FAIL    0.3s     2tok '41'
+  num3    sum7        PASS    4.9s   326tok 
+  num3    weigh       PASS    0.3s     2tok 
+  format  one_word    PASS    0.3s     3tok 
+  format  three_csv   PASS    0.3s     6tok 
+  format  json_only   PASS    0.5s    18tok 
+  format  no_yapping  PASS    0.3s     2tok 
+  code    reverse     PASS    0.4s    15tok 
+  code    fizzbuzz    PASS    1.4s    98tok 
+  code    bsearch     PASS    1.2s    88tok 
+  code    parens      PASS    1.2s    80tok 
+  code    lru         PASS    2.0s   146tok 
+  code    dedupe      PASS    0.8s    48tok 
+  code    merge_iv    PASS    1.9s   123tok 
+  code    edit_dist   PASS    2.5s   192tok 
+  code    valid_bst   PASS    1.4s    89tok 
+  code    lcs         PASS    1.9s   144tok 
+  code    spiral      PASS    2.8s   222tok 
+  code    debug       PASS    0.7s    38tok 
+  agent   sel_read    PASS    1.0s    46tok read_file
+  agent   sel_search  PASS    0.9s    46tok search_code
+  agent   sel_tests   PASS    0.7s    29tok run_tests
+  agent   sel_write   PASS    1.1s    62tok write_file
+  agent   sel_typed   PASS    1.1s    61tok search_code
+  agent   restraint1  PASS    0.8s    22tok 
+  agent   restraint2  FAIL    0.9s    44tok search_code
+
+  agent 6/7  code 12/12  format 4/4  num1 7/9  num2 3/6  num3 3/6
+  TOTAL 35/44 = 79.5%   wall 44.9s
+  saved -> results/2026-08-16/quality-44task.json
