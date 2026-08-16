@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>keyboard task board</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #f4f7fb;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 1rem;
+      margin: 0;
+    }
+
+    .board {
+      background: white;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 28px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      padding: 1.8rem 1.5rem 2rem;
+      transition: box-shadow 0.2s;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #1e2b3c;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .count-badge {
+      background: #e8edf5;
+      color: #1e2b3c;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.3rem 0.9rem;
+      border-radius: 40px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .count-badge span {
+      font-weight: 700;
+      background: white;
+      padding: 0.1rem 0.6rem;
+      border-radius: 30px;
+      color: #0f172a;
+    }
+
+    .add-task {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .add-task input {
+      flex: 1 1 180px;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid #dbe2ea;
+      border-radius: 60px;
+      font-size: 1rem;
+      background: white;
+      transition: border 0.2s, box-shadow 0.2s;
+      outline: none;
+      color: #0b1a2a;
+    }
+
+    .add-task input:focus-visible {
+      border-color: #2f6fed;
+      box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.2);
+    }
+
+    .add-task button {
+      background: #2f6fed;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.9rem 1.6rem;
+      border-radius: 60px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      outline: none;
+      border: 2px solid transparent;
+    }
+
+    .add-task button:hover {
+      background: #1e5adf;
+    }
+
+    .add-task button:active {
+      transform: scale(0.97);
+    }
+
+    .add-task button:focus-visible {
+      border-color: #0b1a2a;
+      box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.3);
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: #f1f4f9;
+      border: 2px solid transparent;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #2b3a4a;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s, color 0.2s;
+      outline: none;
+    }
+
+    .filter-btn:hover {
+      background: #e2e9f2;
+    }
+
+    .filter-btn.active {
+      background: #2f6fed;
+      color: white;
+      border-color: #2f6fed;
+    }
+
+    .filter-btn:focus-visible {
+      border-color: #0b1a2a;
+      box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.2);
+    }
+
+    .task-list {
+      list-style: none;
+      margin-top: 0.5rem;
+      border-top: 1px solid #e6ecf3;
+      padding-top: 0.5rem;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 0.4rem;
+      border-bottom: 1px solid #edf2f8;
+      animation: fade 0.15s ease;
+    }
+
+    @keyframes fade {
+      from { opacity: 0.5; transform: translateY(2px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-check {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      border: 2px solid #b6c4d6;
+      background: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, border 0.2s;
+      outline: none;
+    }
+
+    .task-check:focus-visible {
+      border-color: #2f6fed;
+      box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.2);
+    }
+
+    .task-check.completed {
+      background: #2f6fed;
+      border-color: #2f6fed;
+    }
+
+    .task-check.completed::after {
+      content: "✓";
+      color: white;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 1rem;
+      color: #1e2b3c;
+      word-break: break-word;
+      padding: 0.2rem 0;
+    }
+
+    .task-text.completed-text {
+      text-decoration: line-through;
+      color: #8b9bb0;
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #7e8fa3;
+      font-size: 1.4rem;
+      line-height: 1;
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover {
+      background: #f0e6e6;
+      color: #c0392b;
+    }
+
+    .delete-btn:focus-visible {
+      background: #f0e6e6;
+      color: #c0392b;
+      box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.2);
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: #7b8ba0;
+      background: #fafcff;
+      border-radius: 24px;
+      margin-top: 0.5rem;
+      border: 2px dashed #d4deec;
+      font-size: 1rem;
+    }
+
+    .empty-message strong {
+      color: #2f6fed;
+      font-weight: 600;
+    }
+
+    .visually-hidden-focus:focus-visible {
+      outline: 2px solid #2f6fed;
+      outline-offset: 2px;
+    }
+
+    /* responsive 320px */
+    @media (max-width: 360px) {
+      .board {
+        padding: 1.2rem 1rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .add-task button {
+        padding: 0.8rem 1.2rem;
+      }
+      .filter-btn {
+        padding: 0.4rem 0.9rem;
+        font-size: 0.8rem;
+      }
+      .task-item {
+        gap: 0.5rem;
+      }
+      .delete-btn {
+        font-size: 1.2rem;
+        padding: 0.2rem 0.3rem;
+      }
+    }
+
+    @media (max-width: 320px) {
+      .add-task {
+        flex-direction: column;
+      }
+      .add-task input {
+        width: 100%;
+      }
+      .add-task button {
+        width: 100%;
+      }
+      .filters {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <h1>
+      ✅ Task board
+      <span class="count-badge" aria-live="polite">
+        <span id="taskCount">0</span> left
+      </span>
+    </h1>
+
+    <!-- add task -->
+    <div class="add-task">
+      <input type="text" id="taskInput" placeholder="e.g., write report" aria-label="New task" autocomplete="off">
+      <button id="addBtn" aria-label="Add task">+ Add</button>
+    </div>
+
+    <!-- filter buttons -->
+    <div class="filters" role="group" aria-label="Filter tasks">
+      <button class="filter-btn active" data-filter="all" aria-pressed="true">All</button>
+      <button class="filter-btn" data-filter="active" aria-pressed="false">Active</button>
+      <button class="filter-btn" data-filter="completed" aria-pressed="false">Completed</button>
+    </div>
+
+    <!-- task list container -->
+    <ul class="task-list" id="taskList" aria-live="polite"></ul>
+
+    <!-- empty state placeholder (hidden by default) -->
+    <div id="emptyState" class="empty-message" style="display: none;">
+      ✨ <strong>All clear!</strong> Add a task or enjoy the calm.
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      // ----- state -----
+      let tasks = []; // { id: number, text: string, completed: boolean }
+      let currentFilter = 'all'; // 'all' | 'active' | 'completed'
+
+      // ----- dom elements -----
+      const taskInput = document.getElementById('taskInput');
+      const addBtn = document.getElementById('addBtn');
+      const taskListEl = document.getElementById('taskList');
+      const emptyStateEl = document.getElementById('emptyState');
+      const taskCountSpan = document.getElementById('taskCount');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+
+      // ----- localStorage helpers -----
+      const STORAGE_KEY = 'taskboard_v1';
+      function loadTasks() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              tasks = parsed.filter(t => t && typeof t.text === 'string');
+            }
+          }
+        } catch (e) {
+          tasks = [];
+        }
+        // ensure id and completed fields
+        tasks = tasks.map((t, index) => ({
+          id: (t.id && typeof t.id === 'number') ? t.id : Date.now() + index,
+          text: t.text,
+          completed: !!t.completed
+        }));
+      }
+
+      function saveTasks() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      }
+
+      // ----- render -----
+      function render() {
+        // filter tasks
+        let filtered = tasks;
+        if (currentFilter === 'active') {
+          filtered = tasks.filter(t => !t.completed);
+        } else if (currentFilter === 'completed') {
+          filtered = tasks.filter(t => t.completed);
+        }
+
+        // update count (remaining = active tasks)
+        const remaining = tasks.filter(t => !t.completed).length;
+        taskCountSpan.textContent = remaining;
+
+        // clear list
+        taskListEl.innerHTML = '';
+
+        // show empty state if no tasks in current filter
+        if (filtered.length === 0) {
+          emptyStateEl.style.display = 'block';
+          // custom message based on filter
+          if (currentFilter === 'all' && tasks.length === 0) {
+            emptyStateEl.innerHTML = '📝 <strong>No tasks yet.</strong> Add one above!';
+          } else if (currentFilter === 'active' && tasks.length > 0) {
+            emptyStateEl.innerHTML = '🎉 <strong>No active tasks!</strong> You’re all done.';
+          } else if (currentFilter === 'completed' && tasks.length > 0) {
+            emptyStateEl.innerHTML = '⏳ <strong>No completed tasks yet.</strong> Mark some as done.';
+          } else if (tasks.length === 0) {
+            emptyStateEl.innerHTML = '📝 <strong>No tasks yet.</strong> Add one above!';
+          } else {
+            emptyStateEl.innerHTML = '✨ <strong>Nothing here.</strong>';
+          }
+        } else {
+          emptyStateEl.style.display = 'none';
+        }
+
+        // render filtered tasks
+        filtered.forEach(task => {
+          const li = document.createElement('li');
+          li.className = 'task-item';
+          li.dataset.id = task.id;
+
+          // checkbox (toggle complete)
+          const checkBtn = document.createElement('button');
+          checkBtn.className = 'task-check' + (task.completed ? ' completed' : '');
+          checkBtn.setAttribute('aria-label', task.completed ? 'Mark as active' : 'Mark as completed');
+          checkBtn.setAttribute('aria-pressed', task.completed);
+          checkBtn.addEventListener('click', () => toggleComplete(task.id));
+
+          // task text
+          const textSpan = document.createElement('span');
+          textSpan.className = 'task-text' + (task.completed ? ' completed-text' : '');
+          textSpan.textContent = task.text;
+
+          // delete button
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete-btn';
+          delBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', () => deleteTask(task.id));
+
+          li.appendChild(checkBtn);
+          li.appendChild(textSpan);
+          li.appendChild(delBtn);
+          taskListEl.appendChild(li);
+        });
+
+        // update filter button aria-pressed and active class
+        filterBtns.forEach(btn => {
+          const filter = btn.dataset.filter;
+          const isActive = (filter === currentFilter);
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      }
+
+      // ----- actions -----
+      function addTask() {
+        const text = taskInput.value.trim();
+        if (text === '') {
+          taskInput.focus();
+          return;
+        }
+        const newTask = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          text: text,
+          completed: false
+        };
+        tasks.push(newTask);
+        saveTasks();
+        taskInput.value = '';
+        taskInput.focus();
+        render();
+      }
+
+      function toggleComplete(id) {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+          task.completed = !task.completed;
+          saveTasks();
+          render();
+        }
+      }
+
+      function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        render();
+      }
+
+      // ----- filter handling -----
+      function setFilter(filter) {
+        currentFilter = filter;
+        render();
+      }
+
+      // ----- event listeners -----
+      addBtn.addEventListener('click', addTask);
+
+      taskInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addTask();
+        }
+      });
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const filter = btn.dataset.filter;
+          if (filter) setFilter(filter);
+        });
+      });
+
+      // initial load
+      loadTasks();
+      render();
+
+      // optional: focus input on load
+      window.addEventListener('load', () => {
+        taskInput.focus();
+      });
+
+      // keyboard: delete button already focusable, checkbox focusable, filter buttons focusable
+      // ensure visible focus styles are applied via CSS :focus-visible
+    })();
+  </script>
+</body>
+</html>

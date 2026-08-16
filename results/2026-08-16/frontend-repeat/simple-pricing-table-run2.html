@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing – responsive & theme‑aware</title>
+  <style>
+    /* ---------- design tokens ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f6f8fc;
+      --surface: #ffffff;
+      --surface-2: #f2f5f9;
+      --text-primary: #1a2639;
+      --text-secondary: #4a5a6e;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.08);
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      --shadow-pop: 0 20px 35px -8px rgba(0, 0, 0, 0.12), 0 10px 15px -6px rgba(0, 0, 0, 0.05);
+      --radius: 24px;
+      --radius-btn: 60px;
+      --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* dark scheme – automatic via prefers-color-scheme */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --surface: #111a2c;
+        --surface-2: #1c2740;
+        --text-primary: #eef2f9;
+        --text-secondary: #b0c0d4;
+        --border: #2a3a55;
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --accent-soft: rgba(59, 130, 246, 0.15);
+        --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        --shadow-pop: 0 20px 35px -8px rgba(0, 0, 0, 0.7), 0 10px 15px -6px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    body {
+      background: var(--bg);
+      font-family: var(--font);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      line-height: 1.5;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .pricing-wrapper {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .pricing-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .pricing-header h1 {
+      font-size: clamp(2rem, 6vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* ---------- grid ---------- */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    /* ---------- card ---------- */
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+      position: relative;
+    }
+
+    .price-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-pop);
+    }
+
+    /* highlight for Pro (recommended) */
+    .price-card.recommended {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      box-shadow: var(--shadow-pop);
+      padding: 2rem 1.8rem 2.2rem;
+    }
+
+    .recommended-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+    }
+
+    .plan-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 1.5rem;
+    }
+
+    .price-amount {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .price-period {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin: 0 0 2rem 0;
+      flex: 1;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    .feature-list li::before {
+      content: "✓";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      font-size: 0.8rem;
+      margin-top: 1px;
+    }
+
+    .cta-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-btn);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      letter-spacing: 0.2px;
+    }
+
+    .cta-btn:hover {
+      background: var(--accent-hover);
+      transform: scale(1.02);
+    }
+
+    .cta-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* outline button for non-recommended (cleaner) */
+    .price-card:not(.recommended) .cta-btn {
+      background: transparent;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+      box-shadow: none;
+    }
+
+    .price-card:not(.recommended) .cta-btn:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent-hover);
+      color: var(--accent-hover);
+    }
+
+    /* ---------- responsive: 320px & mobile ---------- */
+    @media (max-width: 900px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+        margin: 0 auto;
+      }
+
+      .price-card.recommended {
+        order: -1;  /* show Pro first on mobile? optional – but we keep natural order? 
+                       better to keep visual hierarchy: we want Pro highlighted, but 
+                       we can keep order as is (Starter, Pro, Enterprise) – fine */
+      }
+
+      /* keep natural order, but we can make Pro stand out with border */
+      .price-card {
+        padding: 1.8rem 1.5rem;
+      }
+    }
+
+    /* extra small (<=380px) */
+    @media (max-width: 380px) {
+      body {
+        padding: 0.75rem;
+      }
+      .price-card {
+        padding: 1.5rem 1.2rem;
+      }
+      .price-amount {
+        font-size: 2.5rem;
+      }
+      .feature-list li {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* ensure 320px works */
+    @media (max-width: 320px) {
+      .pricing-grid {
+        gap: 1rem;
+      }
+      .price-card {
+        padding: 1.25rem 1rem;
+        border-radius: 20px;
+      }
+      .price-amount {
+        font-size: 2.2rem;
+      }
+      .plan-name {
+        font-size: 1.1rem;
+      }
+      .cta-btn {
+        padding: 0.8rem 0.5rem;
+        font-size: 0.95rem;
+      }
+      .recommended-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pricing-wrapper">
+    <div class="pricing-header">
+      <h1>Simple, transparent pricing</h1>
+      <p>Start free, upgrade when you grow. No hidden fees.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="price-card">
+        <div class="plan-name">Starter</div>
+        <div class="price">
+          <span class="price-amount">$9</span>
+          <span class="price-period">/month</span>
+        </div>
+        <ul class="feature-list">
+          <li>1 project</li>
+          <li>5 GB storage</li>
+          <li>Basic analytics</li>
+          <li>Community support</li>
+        </ul>
+        <button class="cta-btn" aria-label="Choose Starter plan">Choose Starter</button>
+      </div>
+
+      <!-- Pro (recommended) -->
+      <div class="price-card recommended">
+        <div class="recommended-badge">★ Recommended</div>
+        <div class="plan-name">Pro</div>
+        <div class="price">
+          <span class="price-amount">$29</span>
+          <span class="price-period">/month</span>
+        </div>
+        <ul class="feature-list">
+          <li>Unlimited projects</li>
+          <li>50 GB storage</li>
+          <li>Advanced analytics & reports</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="cta-btn" aria-label="Choose Pro plan">Choose Pro</button>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="price-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="price">
+          <span class="price-amount">$99</span>
+          <span class="price-period">/month</span>
+        </div>
+        <ul class="feature-list">
+          <li>Unlimited everything</li>
+          <li>1 TB storage</li>
+          <li>Custom integrations</li>
+          <li>24/7 dedicated support</li>
+        </ul>
+        <button class="cta-btn" aria-label="Choose Enterprise plan">Choose Enterprise</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- tiny script for interactive feel (optional) – no external, just a11y/alert -->
+  <script>
+    (function() {
+      // Make buttons respond with a subtle message (no external libs)
+      const buttons = document.querySelectorAll('.cta-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          const plan = this.closest('.price-card')?.querySelector('.plan-name')?.textContent || 'this plan';
+          // just a light feedback – no console spam, but visible for demo
+          const originalText = this.textContent;
+          this.textContent = '✓ Selected';
+          this.style.opacity = '0.9';
+          setTimeout(() => {
+            this.textContent = originalText;
+            this.style.opacity = '1';
+          }, 1200);
+          // optional: you could remove this if you want pure static, but it's harmless
+          // and shows that JS is allowed (self-contained)
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

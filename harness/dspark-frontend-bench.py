@@ -194,6 +194,11 @@ def main():
                     help="send chat_template_kwargs.enable_thinking=false (Qwen3.x; "
                          "reasoning_effort does NOT disable Qwen thinking)")
     ap.add_argument("--max-tokens", type=int, default=12000)
+    ap.add_argument("--repeat", type=int, default=1,
+                    help="run every tier N times and report the SPREAD. n=1 is not "
+                         "publishable here: re-running one tier varied its score by about "
+                         "+/-2 checks, which is the same size as the differences people "
+                         "want to draw conclusions from.")
     ap.add_argument("--label", default="0731")
     ap.add_argument("--parallel", action="store_true",
                     help="fire ALL tiers concurrently and report total wall clock. This is "
@@ -273,14 +278,18 @@ def main():
         return
 
     for tier, name, prompt in TASKS:
-        print("=== %-6s %s ===" % (tier, name), flush=True)
+      for rep in range(1, a.repeat + 1):
+        print("=== %-11s %-16s run %d/%d ===" % (tier, name, rep, a.repeat), flush=True)
         try:
             r = ask(prompt, a.reasoning, max_tokens=a.max_tokens)
         except Exception as e:
             print("  REQUEST FAILED: %s" % str(e)[:100], flush=True)
-            results.append({"tier": tier, "name": name, "error": str(e)[:150]}); continue
+            results.append({"tier": tier, "name": name, "run": rep, "error": str(e)[:150]}); continue
         html = extract_html(r["content"])
-        path = os.path.join(a.outdir, "%s-%s.html" % (tier, name))
+        # keep EVERY repeat's artifact: the spread is the point, and a single kept page
+        # hides which run it came from
+        suffix = "" if a.repeat == 1 else "-run%d" % rep
+        path = os.path.join(a.outdir, "%s-%s%s.html" % (tier, name, suffix))
         open(path, "w", encoding="utf-8").write(html)
 
         c = check(html, tier)
@@ -294,10 +303,10 @@ def main():
         print("  js syntax: %s%s" % ({True: "OK", False: "INVALID", None: "n/a"}[ok],
                                      "" if ok is not False else " — " + jserr), flush=True)
         print("  -> %s\n" % path, flush=True)
-        results.append({"tier": tier, "name": name, "path": path, "bytes": len(html),
-                        "ctok": r["ctok"], "secs": round(r["secs"], 1), "finish": r["finish"],
-                        "checks": c, "checks_passed": passed, "checks_total": len(c),
-                        "js_syntax": ok, "js_err": jserr})
+        results.append({"tier": tier, "name": name, "run": rep, "path": path,
+                        "bytes": len(html), "ctok": r["ctok"], "secs": round(r["secs"], 1),
+                        "finish": r["finish"], "checks": c, "checks_passed": passed,
+                        "checks_total": len(c), "js_syntax": ok, "js_err": jserr})
 
     out = os.path.join(a.outdir, "results-%s.json" % a.label)
     # Record url+model, not just the label: a label naming our model has been wrong
@@ -314,6 +323,29 @@ def main():
         print("  %-6s %-16s checks %2d/%-2d  js=%-7s %5dtok %5.0fs" % (
             r["tier"], r["name"], r["checks_passed"], r["checks_total"],
             {True: "OK", False: "INVALID", None: "n/a"}[r["js_syntax"]], r["ctok"], r["secs"]))
+    if a.repeat > 1:
+        import statistics as _st
+        print("\n  ═══ SPREAD ACROSS %d RUNS (this is why n=1 is not publishable) ═══" % a.repeat)
+        print("  %-16s %-14s %-16s %s" % ("task", "checks", "tokens", "seconds"))
+        for tier, name, _ in TASKS:
+            rs = [r for r in results if r["name"] == name and "error" not in r]
+            if not rs:
+                print("  %-16s ALL RUNS FAILED" % name); continue
+            ch = [r["checks_passed"] for r in rs]
+            tk = [r["ctok"] for r in rs]
+            sc = [r["secs"] for r in rs]
+            print("  %-16s %4.1f (%d-%d)   %6.0f (%d-%d)  %5.0f (%.0f-%.0f)"
+                  % (name, _st.fmean(ch), min(ch), max(ch),
+                     _st.fmean(tk), min(tk), max(tk),
+                     _st.fmean(sc), min(sc), max(sc)))
+        allspread = [max(c) - min(c) for c in
+                     ([r["checks_passed"] for r in results
+                       if r["name"] == n and "error" not in r] for _, n, _ in TASKS) if c]
+        if allspread:
+            print("\n  Widest check spread on a single task: %d. Any claimed difference"
+                  % max(allspread))
+            print("  SMALLER than that is inside the noise of this harness.")
+
     print("\n  ⚠️ Machine checks are NECESSARY, NOT SUFFICIENT — a page can pass all of")
     print("     them and still look terrible. Render them and look.")
     print("  saved -> %s" % out)

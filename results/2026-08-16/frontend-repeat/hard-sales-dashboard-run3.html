@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sales dashboard · svg</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6fb;
+            color: #1e293b;
+            padding: 1.5rem;
+            min-height: 100vh;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        body.dark {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .dashboard {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+        }
+
+        /* header + toggle */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .topbar h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .theme-toggle {
+            background: #e2e8f0;
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        body.dark .theme-toggle {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+
+        /* KPI cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.25rem 1.2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            border: 1px solid #e9eef3;
+            transition: background 0.2s, border 0.2s;
+        }
+
+        body.dark .kpi-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            opacity: 0.7;
+            margin-bottom: 0.4rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .kpi-trend {
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            color: #10b981;
+        }
+
+        body.dark .kpi-trend {
+            color: #34d399;
+        }
+
+        /* chart + table cards */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+            border: 1px solid #e9eef3;
+            transition: background 0.2s, border 0.2s;
+        }
+
+        body.dark .card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* svg chart */
+        .chart-container {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+        }
+
+        .chart-container svg {
+            display: block;
+            min-width: 600px;   /* allow horizontal scroll on small screens */
+            width: 100%;
+            height: auto;
+        }
+
+        .bar {
+            fill: #3b82f6;
+            transition: fill 0.15s;
+        }
+
+        body.dark .bar {
+            fill: #60a5fa;
+        }
+
+        .bar:hover {
+            fill: #2563eb;
+        }
+
+        .axis-label {
+            font-size: 11px;
+            fill: #64748b;
+        }
+
+        body.dark .axis-label {
+            fill: #94a3b8;
+        }
+
+        .tooltip-group {
+            opacity: 0;
+            transition: opacity 0.1s;
+            pointer-events: none;
+        }
+
+        .bar-group:hover .tooltip-group {
+            opacity: 1;
+        }
+
+        .tooltip-bg {
+            fill: #0f172a;
+            rx: 6px;
+        }
+
+        body.dark .tooltip-bg {
+            fill: #f1f5f9;
+        }
+
+        .tooltip-text {
+            fill: white;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        body.dark .tooltip-text {
+            fill: #0f172a;
+        }
+
+        /* table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            margin-top: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 640px;   /* horizontal scroll on small screens */
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.9rem 0.8rem;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+
+        body.dark th {
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        th:hover {
+            background: #eef2f7;
+        }
+
+        body.dark th:hover {
+            background: #2d3a4f;
+        }
+
+        th .sort-ind {
+            display: inline-block;
+            margin-left: 6px;
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #e9eef3;
+            white-space: nowrap;
+        }
+
+        body.dark td {
+            border-bottom-color: #334155;
+        }
+
+        .search-box {
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.9rem;
+            width: 220px;
+            transition: border 0.2s;
+        }
+
+        body.dark .search-box {
+            background: #0f172a;
+            border-color: #475569;
+            color: #f1f5f9;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* responsive */
+        @media (max-width: 900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.8rem;
+            }
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            .topbar h1 {
+                font-size: 1.4rem;
+            }
+            .card {
+                padding: 1rem 0.8rem;
+            }
+        }
+
+        /* small screens: table scrolls horizontally */
+        @media (max-width: 640px) {
+            .table-wrapper {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="topbar">
+        <h1>📊 revenue dashboard</h1>
+        <button class="theme-toggle" id="themeToggle" aria-label="toggle theme">🌙 dark</button>
+    </div>
+
+    <!-- KPI tiles -->
+    <div class="kpi-grid" id="kpiGrid">
+        <!-- filled by JS -->
+    </div>
+
+    <!-- bar chart card -->
+    <div class="card">
+        <div class="card-title">monthly revenue · 2024</div>
+        <div class="chart-container" id="chartContainer"></div>
+    </div>
+
+    <!-- table card -->
+    <div class="card">
+        <div class="card-title">
+            <span>sales records</span>
+        </div>
+        <div class="filter-row">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 filter by name, region...">
+            <span style="font-size:0.8rem; opacity:0.7;">click headers to sort</span>
+        </div>
+        <div class="table-wrapper">
+            <table id="salesTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- sample data ----------
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const revenue = [42000, 38500, 51000, 46800, 55200, 61000, 57800, 63200, 59000, 72000, 68500, 79000];
+
+        const salesData = [
+            { id: 1, customer: 'Acme Corp', region: 'North', amount: 12400, date: '2024-11-02' },
+            { id: 2, customer: 'Globex', region: 'South', amount: 8900, date: '2024-11-05' },
+            { id: 3, customer: 'Initech', region: 'West', amount: 15600, date: '2024-11-09' },
+            { id: 4, customer: 'Umbrella', region: 'East', amount: 7200, date: '2024-11-12' },
+            { id: 5, customer: 'Stark Ind', region: 'North', amount: 19800, date: '2024-11-15' },
+            { id: 6, customer: 'Wayne Ent', region: 'East', amount: 14300, date: '2024-11-18' },
+            { id: 7, customer: 'Hooli', region: 'West', amount: 9800, date: '2024-11-21' },
+            { id: 8, customer: 'Aperture', region: 'South', amount: 16700, date: '2024-11-24' }
+        ];
+
+        // ---------- theme ----------
+        const root = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark') {
+            document.body.classList.add('dark');
+            themeToggle.textContent = '☀️ light';
+        } else {
+            document.body.classList.remove('dark');
+            themeToggle.textContent = '🌙 dark';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            themeToggle.textContent = isDark ? '☀️ light' : '🌙 dark';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        // ---------- KPI tiles ----------
+        const kpiGrid = document.getElementById('kpiGrid');
+        const totalRevenue = revenue.reduce((a,b)=>a+b,0);
+        const avgOrder = Math.round(totalRevenue / salesData.length);
+        const topSale = Math.max(...salesData.map(d=>d.amount));
+        const growth = ((revenue[11] - revenue[0]) / revenue[0] * 100).toFixed(1);
+
+        const kpis = [
+            { label: 'total revenue', value: `$${totalRevenue.toLocaleString()}`, trend: '+12.4%' },
+            { label: 'avg order', value: `$${avgOrder.toLocaleString()}`, trend: '+3.2%' },
+            { label: 'top sale', value: `$${topSale.toLocaleString()}`, trend: '▲ 18%' },
+            { label: 'growth (YoY)', value: `${growth}%`, trend: '▲ 2.1%' }
+        ];
+
+        kpiGrid.innerHTML = kpis.map(k => `
+            <div class="kpi-card">
+                <div class="kpi-label">${k.label}</div>
+                <div class="kpi-value">${k.value}</div>
+                <div class="kpi-trend">${k.trend}</div>
+            </div>
+        `).join('');
+
+        // ---------- SVG bar chart ----------
+        const container = document.getElementById('chartContainer');
+        const width = 640, height = 260;
+        const padding = { top: 20, right: 20, bottom: 35, left: 55 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+        const maxRev = Math.max(...revenue) * 1.1;
+        const barWidth = chartWidth / revenue.length * 0.6;
+        const gap = chartWidth / revenue.length;
+
+        let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="monthly revenue bar chart">`;
+
+        // gridlines + y axis labels
+        for (let i = 0; i <= 4; i++) {
+            const y = padding.top + chartHeight - (i/4)*chartHeight;
+            const val = Math.round(maxRev * i/4);
+            svg += `<line x1="${padding.left}" y1="${y}" x2="${width-padding.right}" y2="${y}" stroke="#cbd5e1" stroke-width="0.5" stroke-dasharray="3 3" />`;
+            svg += `<text x="${padding.left-8}" y="${y+4}" text-anchor="end" class="axis-label">$${val/1000}k</text>`;
+        }
+
+        // bars + tooltips
+        revenue.forEach((val, i) => {
+            const x = padding.left + i * gap + (gap - barWidth)/2;
+            const barHeight = (val / maxRev) * chartHeight;
+            const y = padding.top + chartHeight - barHeight;
+            const tooltipX = x + barWidth/2;
+            const tooltipY = y - 8;
+
+            svg += `<g class="bar-group">`;
+            svg += `<rect class="bar" x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" />`;
+            // tooltip group
+            svg += `<g class="tooltip-group" transform="translate(${tooltipX}, ${tooltipY})">`;
+            svg += `<rect x="-38" y="-28" width="76" height="22" class="tooltip-bg" rx="6" />`;
+            svg += `<text x="0" y="-13" text-anchor="middle" class="tooltip-text">${months[i]}: $${(val/1000).toFixed(1)}k</text>`;
+            svg += `</g>`;
+            svg += `</g>`;
+        });
+
+        // x axis labels
+        months.forEach((m, i) => {
+            const x = padding.left + i * gap + gap/2;
+            svg += `<text x="${x}" y="${height - 10}" text-anchor="middle" class="axis-label">${m}</text>`;
+        });
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+
+        // ---------- sortable & filterable table ----------
+        const thead = document.getElementById('tableHead');
+        const tbody = document.getElementById('tableBody');
+        let currentSort = { key: 'id', dir: 'asc' };
+        let filterText = '';
+
+        const columns = [
+            { key: 'id', label: 'ID' },
+            { key: 'customer', label: 'Customer' },
+            { key: 'region', label: 'Region' },
+            { key: 'amount', label: 'Amount' },
+            { key: 'date', label: 'Date' }
+        ];
+
+        function renderTable() {
+            // filter
+            let filtered = salesData.filter(row => {
+                if (!filterText) return true;
+                const text = filterText.toLowerCase();
+                return row.customer.toLowerCase().includes(text) || 
+                       row.region.toLowerCase().includes(text) ||
+                       row.id.toString().includes(text) ||
+                       row.date.includes(text);
+            });
+
+            // sort
+            const { key, dir } = currentSort;
+            filtered.sort((a, b) => {
+                let valA = a[key];
+                let valB = b[key];
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+                if (valA < valB) return dir === 'asc' ? -1 : 1;
+                if (valA > valB) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // head
+            thead.innerHTML = `<tr>${columns.map(col => {
+                const isSorted = currentSort.key === col.key;
+                const indicator = isSorted ? (currentSort.dir === 'asc' ? '▲' : '▼') : '↕';
+                return `<th data-key="${col.key}">${col.label} <span class="sort-ind">${indicator}</span></th>`;
+            }).join('')}</tr>`;
+
+            // body
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; opacity:0.6;">no matching records</td></tr>`;
+            } else {
+                tbody.innerHTML = filtered.map(row => `
+                    <tr>
+                        <td>${row.id}</td>
+                        <td>${row.customer}</td>
+                        <td>${row.region}</td>
+                        <td>$${row.amount.toLocaleString()}</td>
+                        <td>${row.date}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // event listeners for sorting
+        thead.addEventListener('click', (e) => {
+            const th = e.target.closest('th');
+            if (!th) return;
+            const key = th.dataset.key;
+            if (!key) return;
+            if (currentSort.key === key) {
+                currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.key = key;
+                currentSort.dir = 'asc';
+            }
+            renderTable();
+        });
+
+        // search input
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            filterText = e.target.value.trim();
+            renderTable();
+        });
+
+        // initial render
+        renderTable();
+
+        // ---------- responsive: chart min-width handled by CSS ----------
+    })();
+</script>
+</body>
+</html>

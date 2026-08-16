@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>responsive pricing · three tiers</title>
+  <style>
+    /* ---------- design tokens ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f6f8fc;
+      --surface: #ffffff;
+      --surface-2: #f2f5f9;
+      --text: #1a2639;
+      --text-muted: #5b6b7f;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-soft: #eef4ff;
+      --primary-contrast: #ffffff;
+      --shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+      --shadow-pop: 0 30px 45px -15px rgba(37, 99, 235, 0.2);
+      --radius: 24px;
+      --radius-sm: 14px;
+      --transition: 0.2s ease;
+    }
+
+    /* dark scheme – pure prefers-color-scheme */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b111f;
+        --surface: #131c2e;
+        --surface-2: #1b2639;
+        --text: #eaf0f8;
+        --text-muted: #9aa9bb;
+        --border: #2a3a52;
+        --primary: #5b8cff;
+        --primary-soft: #1d2b44;
+        --primary-contrast: #0b111f;
+        --shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+        --shadow-pop: 0 30px 45px -15px rgba(91, 140, 255, 0.25);
+      }
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .pricing-wrapper {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    /* card base */
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.8rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+    }
+
+    .price-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-pop);
+    }
+
+    /* highlight for pro */
+    .price-card.pro {
+      background: var(--surface);
+      border: 2px solid var(--primary);
+      box-shadow: var(--shadow-pop);
+      padding: 2.2rem 1.8rem 2rem;
+    }
+
+    .price-card.pro:hover {
+      transform: translateY(-6px);
+    }
+
+    /* badge */
+    .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: var(--primary-contrast);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      padding: 0.3rem 0.9rem;
+      border-radius: 30px;
+      margin-bottom: 1.2rem;
+      align-self: flex-start;
+      border: none;
+    }
+
+    .plan-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    .price {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .price small {
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0;
+    }
+
+    .price-note {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.2rem;
+    }
+
+    /* feature list */
+    .feature-list {
+      list-style: none;
+      margin: 0 0 2rem 0;
+      flex: 1;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .feature-list li::before {
+      content: "✓";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+      width: 1.3rem;
+      height: 1.3rem;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    /* CTA button */
+    .cta-btn {
+      display: block;
+      width: 100%;
+      background: var(--primary);
+      color: var(--primary-contrast);
+      border: none;
+      border-radius: 60px;
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s, transform 0.1s;
+      text-align: center;
+      text-decoration: none;
+      letter-spacing: 0.2px;
+      box-shadow: 0 8px 18px -8px rgba(37, 99, 235, 0.3);
+    }
+
+    .cta-btn:hover {
+      background: var(--primary);
+      filter: brightness(1.08);
+    }
+
+    .cta-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* pro button variant */
+    .price-card.pro .cta-btn {
+      background: var(--primary);
+      box-shadow: 0 12px 22px -10px rgba(37, 99, 235, 0.4);
+    }
+
+    /* responsive: 3 → 1 column at 720px, but also fine at 320px */
+    @media (max-width: 860px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+        margin: 0 auto;
+        gap: 1.8rem;
+      }
+
+      .price-card {
+        padding: 1.8rem 1.5rem;
+      }
+
+      .price-card.pro {
+        padding: 2rem 1.5rem;
+      }
+
+      .price {
+        font-size: 2.8rem;
+      }
+    }
+
+    /* extra small (<=360) fine-tune */
+    @media (max-width: 360px) {
+      body {
+        padding: 0.8rem;
+      }
+
+      .price-card {
+        padding: 1.5rem 1.2rem;
+      }
+
+      .price-card.pro {
+        padding: 1.8rem 1.2rem;
+      }
+
+      .price {
+        font-size: 2.5rem;
+      }
+
+      .feature-list li {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* ensure no overflow at 320px */
+    @media (max-width: 320px) {
+      .pricing-grid {
+        gap: 1.2rem;
+      }
+
+      .price-card {
+        padding: 1.2rem 1rem;
+        border-radius: 20px;
+      }
+
+      .price-card.pro {
+        padding: 1.5rem 1rem;
+      }
+
+      .price {
+        font-size: 2.2rem;
+      }
+
+      .plan-name {
+        font-size: 1.1rem;
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.7rem;
+      }
+
+      .cta-btn {
+        padding: 0.8rem 0.8rem;
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pricing-wrapper">
+    <div class="pricing-grid">
+      
+      <!-- Starter tier -->
+      <div class="price-card">
+        <div class="plan-name">Starter</div>
+        <div class="price">$9 <small>/mo</small></div>
+        <div class="price-note">For personal projects</div>
+        <ul class="feature-list">
+          <li>1 project</li>
+          <li>3 GB storage</li>
+          <li>Basic analytics</li>
+          <li>Community support</li>
+        </ul>
+        <button class="cta-btn" type="button">Start free trial</button>
+      </div>
+
+      <!-- Pro tier (highlighted) -->
+      <div class="price-card pro">
+        <span class="badge">★ Recommended</span>
+        <div class="plan-name">Pro</div>
+        <div class="price">$29 <small>/mo</small></div>
+        <div class="price-note">For growing teams</div>
+        <ul class="feature-list">
+          <li>Unlimited projects</li>
+          <li>50 GB storage</li>
+          <li>Advanced analytics & reports</li>
+          <li>Priority support (24/7)</li>
+        </ul>
+        <button class="cta-btn" type="button">Choose Pro</button>
+      </div>
+
+      <!-- Enterprise tier -->
+      <div class="price-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="price">$99 <small>/mo</small></div>
+        <div class="price-note">For large organizations</div>
+        <ul class="feature-list">
+          <li>Unlimited everything</li>
+          <li>500 GB storage</li>
+          <li>Custom integrations & SLA</li>
+          <li>Dedicated account manager</li>
+        </ul>
+        <button class="cta-btn" type="button">Contact sales</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- minimal JS for interactive feel (no external) -->
+  <script>
+    (function() {
+      // small enhancement: click on CTA shows a subtle toast (no external)
+      const buttons = document.querySelectorAll('.cta-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const originalText = this.innerText;
+          this.innerText = '✓ ' + originalText;
+          this.style.opacity = '0.85';
+          setTimeout(() => {
+            this.innerText = originalText;
+            this.style.opacity = '1';
+          }, 1200);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

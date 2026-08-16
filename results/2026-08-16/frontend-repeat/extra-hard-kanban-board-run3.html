@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kanban · no frameworks</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-2: #e9ecf2;
+      --text: #1e2430;
+      --muted: #5b6472;
+      --border: #d0d7e2;
+      --accent: #2b5cff;
+      --accent-soft: #dbe4ff;
+      --danger: #c42b1c;
+      --shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+      --drop-glow: 0 0 0 2px var(--accent);
+      --radius: 14px;
+      --gap: 1rem;
+    }
+
+    body.dark {
+      --bg: #0f1218;
+      --surface: #1a1f2a;
+      --surface-2: #252c3a;
+      --text: #eef2f8;
+      --muted: #9aa6b8;
+      --border: #2e3748;
+      --accent: #7c9bff;
+      --accent-soft: #1d2a4a;
+      --danger: #ff7a6e;
+      --shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.4;
+      min-height: 100vh;
+      padding: 1rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .board {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* header controls */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      background: var(--surface);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .toolbar input[type="text"] {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      flex: 1 1 180px;
+      min-width: 140px;
+    }
+
+    .toolbar input[type="text"]:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .btn:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: white;
+      border-color: transparent;
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.05);
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+    }
+
+    /* columns grid */
+    .columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+      align-items: start;
+    }
+
+    .column {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      min-height: 220px;
+      transition: box-shadow 0.15s, background 0.2s;
+    }
+
+    .column.drop-indicator {
+      box-shadow: var(--drop-glow), var(--shadow);
+      background: var(--accent-soft);
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      padding: 0.25rem 0.25rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+
+    .count-badge {
+      background: var(--surface-2);
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      min-height: 60px;
+    }
+
+    /* card */
+    .card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.7rem 0.8rem;
+      cursor: grab;
+      transition: 0.1s;
+      word-break: break-word;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      position: relative;
+    }
+
+    .card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+
+    .card:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+    }
+
+    .card-actions button {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+    }
+
+    .card-actions button:hover {
+      background: var(--surface);
+      color: var(--danger);
+    }
+
+    .card-actions button:focus-visible {
+      outline: 2px solid var(--accent);
+    }
+
+    .edit-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 0.3rem 0.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    /* add card area */
+    .add-card {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.8rem;
+    }
+
+    .add-card input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+    }
+
+    .add-card input:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    /* search */
+    .search-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      width: 200px;
+    }
+
+    /* responsive stack */
+    @media (max-width: 720px) {
+      .columns {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+      }
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .theme-toggle {
+        margin-left: 0;
+      }
+    }
+
+    /* undo button */
+    .undo-btn {
+      background: var(--surface-2);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    .sr-focus {
+      display: flex;
+      gap: 0.3rem;
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+<div class="board">
+  <div class="toolbar">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 filter cards..." aria-label="Search cards">
+    <button class="btn undo-btn" id="undoBtn" title="Undo last action">↩ Undo</button>
+    <button class="btn theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">🌓 Theme</button>
+  </div>
+
+  <div class="columns" id="boardColumns">
+    <!-- three columns injected by JS -->
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- state ----------
+    const STORAGE_KEY = 'kanban_board_v1';
+    const THEME_KEY = 'kanban_theme';
+
+    const COLUMNS = ['todo', 'progress', 'done'];
+    const COLUMN_TITLES = { todo: 'To Do', progress: 'In Progress', done: 'Done' };
+
+    // seed data
+    const seedCards = [
+      { id: 'c1', title: 'Design onboarding flow', column: 'todo' },
+      { id: 'c2', title: 'Fix login bug on mobile', column: 'todo' },
+      { id: 'c3', title: 'Write API integration tests', column: 'progress' },
+      { id: 'c4', title: 'Review pull request #42', column: 'progress' },
+      { id: 'c5', title: 'Update documentation', column: 'done' },
+      { id: 'c6', title: 'Ship dark mode toggle', column: 'done' },
+    ];
+
+    let cards = [];
+    let historyStack = []; // each entry: {type, snapshot}
+    let currentSearch = '';
+
+    // DOM refs
+    const columnsContainer = document.getElementById('boardColumns');
+    const searchInput = document.getElementById('searchInput');
+    const undoBtn = document.getElementById('undoBtn');
+    const themeToggle = document.getElementById('themeToggle');
+
+    // ---------- helpers ----------
+    function generateId() {
+      return 'card_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ cards }));
+    }
+
+    function loadState() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.cards && Array.isArray(parsed.cards)) {
+            cards = parsed.cards;
+            return;
+          }
+        } catch (e) {}
+      }
+      cards = seedCards.map(c => ({ ...c }));
+    }
+
+    // history snapshot
+    function pushHistory() {
+      historyStack.push({
+        type: 'action',
+        snapshot: JSON.stringify({ cards })
+      });
+      if (historyStack.length > 30) historyStack.shift();
+    }
+
+    // ---------- render ----------
+    function renderBoard() {
+      // filter cards based on search
+      const filteredCards = cards.filter(card => {
+        if (!currentSearch) return true;
+        return card.title.toLowerCase().includes(currentSearch.toLowerCase());
+      });
+
+      // build columns html
+      let html = '';
+      for (let col of COLUMNS) {
+        const colCards = filteredCards.filter(c => c.column === col);
+        const count = colCards.length;
+        html += `
+          <div class="column" data-column="${col}" aria-label="${COLUMN_TITLES[col]} column">
+            <div class="column-header">
+              <span>${COLUMN_TITLES[col]}</span>
+              <span class="count-badge" data-count-col="${col}">${count}</span>
+            </div>
+            <div class="card-list" data-list="${col}">
+              ${colCards.map(card => renderCard(card)).join('')}
+            </div>
+            <div class="add-card">
+              <input type="text" placeholder="Add card..." aria-label="Add card to ${COLUMN_TITLES[col]}" data-add-input="${col}">
+              <button class="btn primary" data-add-btn="${col}" aria-label="Add card">+</button>
+            </div>
+          </div>
+        `;
+      }
+      columnsContainer.innerHTML = html;
+
+      // attach event listeners (delegation)
+      attachEvents();
+      updateCounts();
+    }
+
+    function renderCard(card) {
+      return `
+        <div class="card" draggable="true" data-card-id="${card.id}" tabindex="0" aria-label="Card: ${card.title}">
+          <div class="card-title" data-title-display>${escapeHtml(card.title)}</div>
+          <div class="card-actions">
+            <button data-edit-card="${card.id}" aria-label="Edit card">✎</button>
+            <button data-delete-card="${card.id}" aria-label="Delete card">🗑</button>
+          </div>
+          <div class="sr-focus">
+            <button data-move-left="${card.id}" aria-label="Move left">←</button>
+            <button data-move-right="${card.id}" aria-label="Move right">→</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function updateCounts() {
+      for (let col of COLUMNS) {
+        const countEl = document.querySelector(`[data-count-col="${col}"]`);
+        if (countEl) {
+          const colCards = cards.filter(c => c.column === col);
+          countEl.textContent = colCards.length;
+        }
+      }
+    }
+
+    // ---------- actions ----------
+    function moveCard(cardId, direction) {
+      const card = cards.find(c => c.id === cardId);
+      if (!card) return;
+      const colIndex = COLUMNS.indexOf(card.column);
+      let newIndex = colIndex + direction;
+      if (newIndex < 0 || newIndex >= COLUMNS.length) return;
+      pushHistory();
+      card.column = COLUMNS[newIndex];
+      saveState();
+      renderBoard();
+    }
+
+    function addCard(column, title) {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+      pushHistory();
+      cards.push({ id: generateId(), title: trimmed, column });
+      saveState();
+      renderBoard();
+    }
+
+    function deleteCard(cardId) {
+      const card = cards.find(c => c.id === cardId);
+      if (!card) return;
+      pushHistory();
+      cards = cards.filter(c => c.id !== cardId);
+      saveState();
+      renderBoard();
+    }
+
+    function editCard(cardId, newTitle) {
+      const card = cards.find(c => c.id === cardId);
+      if (!card) return;
+      const trimmed = newTitle.trim();
+      if (!trimmed) return;
+      pushHistory();
+      card.title = trimmed;
+      saveState();
+      renderBoard();
+    }
+
+    function undo() {
+      if (historyStack.length === 0) return;
+      const last = historyStack.pop();
+      try {
+        const snapshot = JSON.parse(last.snapshot);
+        cards = snapshot.cards;
+        saveState();
+        renderBoard();
+      } catch (e) {}
+    }
+
+    // ---------- drag & drop ----------
+    let draggedCardId = null;
+
+    function handleDragStart(e) {
+      const cardEl = e.target.closest('.card');
+      if (!cardEl) return;
+      draggedCardId = cardEl.dataset.cardId;
+      e.dataTransfer.setData('text/plain', draggedCardId);
+      e.dataTransfer.effectAllowed = 'move';
+      cardEl.classList.add('dragging');
+    }
+
+    function handleDragEnd(e) {
+      const cardEl = e.target.closest('.card');
+      if (cardEl) cardEl.classList.remove('dragging');
+      // remove drop indicators
+      document.querySelectorAll('.column').forEach(col => col.classList.remove('drop-indicator'));
+      draggedCardId = null;
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      const column = e.target.closest('.column');
+      if (!column) return;
+      e.dataTransfer.dropEffect = 'move';
+      // remove all indicators then add to current
+      document.querySelectorAll('.column').forEach(col => col.classList.remove('drop-indicator'));
+      column.classList.add('drop-indicator');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const column = e.target.closest('.column');
+      if (!column) return;
+      const targetColumn = column.dataset.column;
+      const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+      if (!cardId) return;
+      const card = cards.find(c => c.id === cardId);
+      if (!card) return;
+      if (card.column === targetColumn) {
+        // still remove indicator
+        document.querySelectorAll('.column').forEach(col => col.classList.remove('drop-indicator'));
+        return;
+      }
+      pushHistory();
+      card.column = targetColumn;
+      saveState();
+      renderBoard();
+    }
+
+    // ---------- event delegation ----------
+    function attachEvents() {
+      // add card buttons
+      document.querySelectorAll('[data-add-btn]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const col = btn.dataset.addBtn;
+          const input = document.querySelector(`[data-add-input="${col}"]`);
+          if (input) {
+            addCard(col, input.value);
+            input.value = '';
+          }
+        });
+      });
+
+      // add card input enter
+      document.querySelectorAll('[data-add-input]').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            const col = input.dataset.addInput;
+            addCard(col, input.value);
+            input.value = '';
+          }
+        });
+      });
+
+      // edit card (double click on title)
+      document.querySelectorAll('[data-title-display]').forEach(titleEl => {
+        titleEl.addEventListener('dblclick', (e) => {
+          const cardEl = titleEl.closest('.card');
+          const cardId = cardEl.dataset.cardId;
+          const card = cards.find(c => c.id === cardId);
+          if (!card) return;
+          // replace title with input
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = card.title;
+          input.className = 'edit-input';
+          titleEl.replaceWith(input);
+          input.focus();
+          input.select();
+          input.addEventListener('blur', () => {
+            editCard(cardId, input.value);
+          });
+          input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              input.blur();
+            }
+          });
+        });
+      });
+
+      // delete card
+      document.querySelectorAll('[data-delete-card]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const cardId = btn.dataset.deleteCard;
+          deleteCard(cardId);
+        });
+      });
+
+      // move left/right buttons
+      document.querySelectorAll('[data-move-left]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const cardId = btn.dataset.moveLeft;
+          moveCard(cardId, -1);
+        });
+      });
+      document.querySelectorAll('[data-move-right]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const cardId = btn.dataset.moveRight;
+          moveCard(cardId, 1);
+        });
+      });
+
+      // drag events (attach to cards)
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+      });
+
+      // column drop targets
+      document.querySelectorAll('.column').forEach(col => {
+        col.addEventListener('dragover', handleDragOver);
+        col.addEventListener('drop', handleDrop);
+        col.addEventListener('dragleave', (e) => {
+          if (!col.contains(e.relatedTarget)) {
+            col.classList.remove('drop-indicator');
+          }
+        });
+      });
+
+      // keyboard on card: arrow keys move
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            moveCard(card.dataset.cardId, -1);
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            moveCard(card.dataset.cardId, 1);
+          }
+        });
+      });
+    }
+
+    // ---------- search ----------
+    function handleSearch(value) {
+      currentSearch = value.trim();
+      renderBoard();
+    }
+
+    // ---------- theme ----------
+    function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === 'dark') {
+        document.body.classList.add('dark');
+      } else {
+        document.body.classList.remove('dark');
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+    }
+
+    // ---------- init ----------
+    function init() {
+      loadState();
+      initTheme();
+      renderBoard();
+
+      // search listener
+      searchInput.addEventListener('input', (e) => handleSearch(e.target.value));
+
+      // undo
+      undoBtn.addEventListener('click', undo);
+
+      // theme toggle
+      themeToggle.addEventListener('click', toggleTheme);
+
+      // global drag end cleanup
+      document.addEventListener('dragend', () => {
+        document.querySelectorAll('.column').forEach(col => col.classList.remove('drop-indicator'));
+      });
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>

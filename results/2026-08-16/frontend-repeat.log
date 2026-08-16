@@ -1,0 +1,125 @@
+=== simple      pricing-table    run 1/3 ===
+  2715 tok in 37s (finish=stop), 8892 bytes
+  machine checks: 10/12
+    FAIL semantic_html
+    FAIL focus_styles
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/simple-pricing-table-run1.html
+
+=== simple      pricing-table    run 2/3 ===
+  3072 tok in 43s (finish=stop), 10197 bytes
+  machine checks: 10/12
+    FAIL semantic_html
+    FAIL focus_styles
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/simple-pricing-table-run2.html
+
+=== simple      pricing-table    run 3/3 ===
+  2980 tok in 41s (finish=stop), 9687 bytes
+  machine checks: 10/12
+    FAIL semantic_html
+    FAIL focus_styles
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/simple-pricing-table-run3.html
+
+=== medium      task-board       run 1/3 ===
+  3834 tok in 53s (finish=stop), 13863 bytes
+  machine checks: 13/15
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/medium-task-board-run1.html
+
+=== medium      task-board       run 2/3 ===
+  3608 tok in 49s (finish=stop), 16119 bytes
+  machine checks: 13/15
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/medium-task-board-run2.html
+
+=== medium      task-board       run 3/3 ===
+  3496 tok in 46s (finish=stop), 16162 bytes
+  machine checks: 13/15
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/medium-task-board-run3.html
+
+=== hard        sales-dashboard  run 1/3 ===
+  5575 tok in 78s (finish=stop), 22567 bytes
+  machine checks: 15/18
+    FAIL semantic_html
+    FAIL dark_mode
+    FAIL focus_styles
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/hard-sales-dashboard-run1.html
+
+=== hard        sales-dashboard  run 2/3 ===
+  4862 tok in 67s (finish=stop), 19206 bytes
+  machine checks: 15/18
+    FAIL semantic_html
+    FAIL dark_mode
+    FAIL inline_svg
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/hard-sales-dashboard-run2.html
+
+=== hard        sales-dashboard  run 3/3 ===
+  4516 tok in 61s (finish=stop), 17246 bytes
+  machine checks: 16/18
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/hard-sales-dashboard-run3.html
+
+=== extra-hard  kanban-board     run 1/3 ===
+  4693 tok in 66s (finish=stop), 18207 bytes
+  machine checks: 16/18
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/extra-hard-kanban-board-run1.html
+
+=== extra-hard  kanban-board     run 2/3 ===
+  5280 tok in 73s (finish=stop), 20533 bytes
+  machine checks: 16/18
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/extra-hard-kanban-board-run2.html
+
+=== extra-hard  kanban-board     run 3/3 ===
+  5023 tok in 69s (finish=stop), 19244 bytes
+  machine checks: 16/18
+    FAIL semantic_html
+    FAIL dark_mode
+  js syntax: OK
+  -> results/2026-08-16/frontend-repeat/extra-hard-kanban-board-run3.html
+
+============================================================
+  simple pricing-table    checks 10/12  js=OK       2715tok    37s
+  simple pricing-table    checks 10/12  js=OK       3072tok    43s
+  simple pricing-table    checks 10/12  js=OK       2980tok    41s
+  medium task-board       checks 13/15  js=OK       3834tok    53s
+  medium task-board       checks 13/15  js=OK       3608tok    48s
+  medium task-board       checks 13/15  js=OK       3496tok    46s
+  hard   sales-dashboard  checks 15/18  js=OK       5575tok    78s
+  hard   sales-dashboard  checks 15/18  js=OK       4862tok    67s
+  hard   sales-dashboard  checks 16/18  js=OK       4516tok    61s
+  extra-hard kanban-board     checks 16/18  js=OK       4693tok    66s
+  extra-hard kanban-board     checks 16/18  js=OK       5280tok    73s
+  extra-hard kanban-board     checks 16/18  js=OK       5023tok    69s
+
+  ═══ SPREAD ACROSS 3 RUNS (this is why n=1 is not publishable) ═══
+  task             checks         tokens           seconds
+  pricing-table    10.0 (10-10)     2922 (2715-3072)     41 (37-43)
+  task-board       13.0 (13-13)     3646 (3496-3834)     49 (46-53)
+  sales-dashboard  15.3 (15-16)     4984 (4516-5575)     69 (61-78)
+  kanban-board     16.0 (16-16)     4999 (4693-5280)     69 (66-73)
+
+  Widest check spread on a single task: 1. Any claimed difference
+  SMALLER than that is inside the noise of this harness.
+
+  ⚠️ Machine checks are NECESSARY, NOT SUFFICIENT — a page can pass all of
+     them and still look terrible. Render them and look.
+  saved -> results/2026-08-16/frontend-repeat/results-deepseek-uncapped-x3.json

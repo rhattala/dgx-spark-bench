@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kanban · no frameworks</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-2: #e9ecf2;
+      --text: #1a2634;
+      --muted: #5b6b7c;
+      --accent: #2b6f9e;
+      --accent-soft: #d4e3f0;
+      --danger: #b23b3b;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      --radius: 14px;
+      --border: 1px solid #d8dee8;
+      --drop-glow: 0 0 0 3px rgba(43, 111, 158, 0.4);
+      --focus-ring: 0 0 0 3px rgba(43, 111, 158, 0.5);
+    }
+
+    body.dark {
+      --bg: #0f1419;
+      --surface: #1c242e;
+      --surface-2: #2a3542;
+      --text: #e7edf3;
+      --muted: #9aabbc;
+      --accent: #6ab0e6;
+      --accent-soft: #1e3a4f;
+      --danger: #e06c6c;
+      --border: #33414f;
+      --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.4;
+      padding: 1rem;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .board {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      background: var(--surface);
+      padding: 0.9rem 1.2rem;
+      border-radius: var(--radius);
+      border: var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .toolbar input[type="text"] {
+      flex: 1 1 180px;
+      background: var(--surface-2);
+      border: 1px solid transparent;
+      border-radius: 40px;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+    }
+
+    .toolbar input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: var(--focus-ring);
+    }
+
+    .toolbar button, .card-actions button, .card-edit button {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.1s ease;
+      font-size: 0.9rem;
+    }
+
+    .toolbar button:hover, .card-actions button:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .toolbar button:focus-visible, .card-actions button:focus-visible, .card:focus-visible, .card-edit input:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    .theme-toggle {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+    }
+
+    .columns {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: var(--border);
+      box-shadow: var(--shadow);
+      flex: 1 1 280px;
+      min-width: 260px;
+      padding: 1rem;
+      transition: box-shadow 0.15s;
+    }
+
+    .column.drop-indicator {
+      box-shadow: var(--drop-glow);
+      background: var(--accent-soft);
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .count-badge {
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .card-list {
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 0.9rem;
+      cursor: grab;
+      transition: 0.1s;
+      position: relative;
+      word-break: break-word;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+
+    .card.selected {
+      border: 2px solid var(--accent);
+      box-shadow: var(--focus-ring);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+      justify-content: flex-end;
+    }
+
+    .card-actions button {
+      padding: 0.2rem 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .card-edit {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+
+    .card-edit input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.4rem 0.6rem;
+      color: var(--text);
+    }
+
+    .add-card-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .add-card-form input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 0.5rem 0.9rem;
+      color: var(--text);
+    }
+
+    .add-card-form input:focus {
+      border-color: var(--accent);
+      box-shadow: var(--focus-ring);
+      outline: none;
+    }
+
+    .add-card-form button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 0.5rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .undo-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+    }
+
+    .undo-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .search-highlight {
+      background: rgba(255, 230, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    /* responsive stack */
+    @media (max-width: 720px) {
+      .columns {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .column {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 320px) {
+      body { padding: 0.5rem; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+<div class="board">
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="🔍 filter cards..." aria-label="search cards">
+    <button class="undo-btn" id="undoBtn" disabled>↩︎ Undo</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="toggle theme">🌓 Theme</button>
+  </div>
+
+  <div class="columns" id="boardColumns">
+    <!-- three columns injected by JS -->
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- seed data ----------
+    const seedCards = [
+      { id: 'c1', title: 'Design onboarding flow', column: 'todo' },
+      { id: 'c2', title: 'Fix login bug (session)', column: 'todo' },
+      { id: 'c3', title: 'Write API tests', column: 'inprogress' },
+      { id: 'c4', title: 'Update user docs', column: 'inprogress' },
+      { id: 'c5', title: 'Refactor drag & drop', column: 'done' },
+      { id: 'c6', title: 'Dark mode polish', column: 'done' }
+    ];
+
+    const COLUMNS = [
+      { id: 'todo', title: 'To Do' },
+      { id: 'inprogress', title: 'In Progress' },
+      { id: 'done', title: 'Done' }
+    ];
+
+    // ---------- state ----------
+    let state = {
+      cards: [],
+      history: [],   // stack of actions {type, payload}
+      selectedCardId: null,
+      filter: ''
+    };
+
+    // ---------- persistence ----------
+    const STORAGE_KEY = 'kanban_board_v1';
+    const THEME_KEY = 'kanban_theme';
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && Array.isArray(parsed.cards)) {
+            state.cards = parsed.cards;
+            return;
+          }
+        }
+      } catch (e) {}
+      // seed
+      state.cards = seedCards.map(c => ({ ...c }));
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ cards: state.cards }));
+    }
+
+    // ---------- theme ----------
+    function loadTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === 'dark') document.body.classList.add('dark');
+    }
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+    }
+
+    // ---------- helpers ----------
+    function getColumnCards(colId) {
+      return state.cards.filter(c => c.column === colId);
+    }
+
+    function findCardById(id) {
+      return state.cards.find(c => c.id === id);
+    }
+
+    function generateId() {
+      return 'card_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    }
+
+    // ---------- history ----------
+    function pushHistory(action) {
+      state.history.push(action);
+      if (state.history.length > 50) state.history.shift(); // limit
+      document.getElementById('undoBtn').disabled = state.history.length === 0;
+    }
+
+    function undoLast() {
+      if (state.history.length === 0) return;
+      const action = state.history.pop();
+      const { type, payload } = action;
+
+      if (type === 'move') {
+        const card = findCardById(payload.cardId);
+        if (card) card.column = payload.fromCol;
+      } else if (type === 'add') {
+        state.cards = state.cards.filter(c => c.id !== payload.cardId);
+      } else if (type === 'edit') {
+        const card = findCardById(payload.cardId);
+        if (card) card.title = payload.oldTitle;
+      } else if (type === 'delete') {
+        // restore card at original position (push to end of column)
+        const card = { id: payload.cardId, title: payload.title, column: payload.column };
+        state.cards.push(card);
+      }
+      // clear selection if needed
+      if (state.selectedCardId && !findCardById(state.selectedCardId)) {
+        state.selectedCardId = null;
+      }
+      persist();
+      render();
+      document.getElementById('undoBtn').disabled = state.history.length === 0;
+    }
+
+    // ---------- actions ----------
+    function addCard(columnId, title) {
+      if (!title.trim()) return;
+      const newCard = { id: generateId(), title: title.trim(), column: columnId };
+      state.cards.push(newCard);
+      pushHistory({ type: 'add', payload: { cardId: newCard.id, columnId } });
+      persist();
+      render();
+    }
+
+    function deleteCard(cardId) {
+      const card = findCardById(cardId);
+      if (!card) return;
+      const payload = { cardId, title: card.title, column: card.column };
+      state.cards = state.cards.filter(c => c.id !== cardId);
+      if (state.selectedCardId === cardId) state.selectedCardId = null;
+      pushHistory({ type: 'delete', payload });
+      persist();
+      render();
+    }
+
+    function editCard(cardId, newTitle) {
+      const card = findCardById(cardId);
+      if (!card || !newTitle.trim()) return;
+      const oldTitle = card.title;
+      if (oldTitle === newTitle.trim()) return;
+      card.title = newTitle.trim();
+      pushHistory({ type: 'edit', payload: { cardId, oldTitle } });
+      persist();
+      render();
+    }
+
+    function moveCard(cardId, toColumn) {
+      const card = findCardById(cardId);
+      if (!card || card.column === toColumn) return;
+      const fromCol = card.column;
+      card.column = toColumn;
+      pushHistory({ type: 'move', payload: { cardId, fromCol, toCol: toColumn } });
+      persist();
+      render();
+    }
+
+    // ---------- render ----------
+    function render() {
+      const container = document.getElementById('boardColumns');
+      container.innerHTML = '';
+
+      const filter = state.filter.toLowerCase();
+
+      COLUMNS.forEach(col => {
+        const colEl = document.createElement('div');
+        colEl.className = 'column';
+        colEl.dataset.column = col.id;
+        colEl.setAttribute('aria-label', `${col.title} column`);
+
+        // header
+        const header = document.createElement('div');
+        header.className = 'column-header';
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = col.title;
+        const countSpan = document.createElement('span');
+        countSpan.className = 'count-badge';
+        const cardsInCol = getColumnCards(col.id);
+        const filteredCards = cardsInCol.filter(c => c.title.toLowerCase().includes(filter));
+        countSpan.textContent = filteredCards.length;
+        header.appendChild(titleSpan);
+        header.appendChild(countSpan);
+        colEl.appendChild(header);
+
+        // card list
+        const list = document.createElement('div');
+        list.className = 'card-list';
+        list.dataset.list = col.id;
+
+        // sort by original order (stable)
+        filteredCards.forEach(card => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card';
+          if (state.selectedCardId === card.id) cardEl.classList.add('selected');
+          cardEl.draggable = true;
+          cardEl.dataset.cardId = card.id;
+          cardEl.tabIndex = 0; // focusable
+
+          // title
+          const titleDiv = document.createElement('div');
+          titleDiv.textContent = card.title;
+          titleDiv.style.whiteSpace = 'pre-wrap';
+          cardEl.appendChild(titleDiv);
+
+          // actions (edit, delete, move left/right)
+          const actions = document.createElement('div');
+          actions.className = 'card-actions';
+
+          const leftBtn = document.createElement('button');
+          leftBtn.textContent = '←';
+          leftBtn.setAttribute('aria-label', 'move left');
+          leftBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const colIdx = COLUMNS.findIndex(c => c.id === card.column);
+            if (colIdx > 0) {
+              moveCard(card.id, COLUMNS[colIdx-1].id);
+            }
+          });
+
+          const rightBtn = document.createElement('button');
+          rightBtn.textContent = '→';
+          rightBtn.setAttribute('aria-label', 'move right');
+          rightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const colIdx = COLUMNS.findIndex(c => c.id === card.column);
+            if (colIdx < COLUMNS.length-1) {
+              moveCard(card.id, COLUMNS[colIdx+1].id);
+            }
+          });
+
+          const editBtn = document.createElement('button');
+          editBtn.textContent = '✎';
+          editBtn.setAttribute('aria-label', 'edit card');
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startEdit(card.id);
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '🗑';
+          delBtn.setAttribute('aria-label', 'delete card');
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteCard(card.id);
+          });
+
+          actions.appendChild(leftBtn);
+          actions.appendChild(rightBtn);
+          actions.appendChild(editBtn);
+          actions.appendChild(delBtn);
+          cardEl.appendChild(actions);
+
+          // double click edit
+          cardEl.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            startEdit(card.id);
+          });
+
+          // keyboard selection & move
+          cardEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              state.selectedCardId = card.id;
+              render();
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              const colIdx = COLUMNS.findIndex(c => c.id === card.column);
+              if (colIdx > 0) {
+                moveCard(card.id, COLUMNS[colIdx-1].id);
+                state.selectedCardId = card.id;
+              }
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const colIdx = COLUMNS.findIndex(c => c.id === card.column);
+              if (colIdx < COLUMNS.length-1) {
+                moveCard(card.id, COLUMNS[colIdx+1].id);
+                state.selectedCardId = card.id;
+              }
+            }
+          });
+
+          // drag events
+          cardEl.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', card.id);
+            cardEl.classList.add('dragging');
+            state.selectedCardId = card.id;
+          });
+          cardEl.addEventListener('dragend', () => {
+            cardEl.classList.remove('dragging');
+            document.querySelectorAll('.column').forEach(c => c.classList.remove('drop-indicator'));
+          });
+
+          list.appendChild(cardEl);
+        });
+
+        // add card form
+        const addForm = document.createElement('form');
+        addForm.className = 'add-card-form';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Add card…';
+        input.setAttribute('aria-label', `add to ${col.title}`);
+        const addBtn = document.createElement('button');
+        addBtn.textContent = '+';
+        addBtn.type = 'submit';
+        addForm.appendChild(input);
+        addForm.appendChild(addBtn);
+        addForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          addCard(col.id, input.value);
+          input.value = '';
+        });
+
+        colEl.appendChild(list);
+        colEl.appendChild(addForm);
+
+        // drop target events
+        colEl.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          colEl.classList.add('drop-indicator');
+        });
+        colEl.addEventListener('dragleave', () => {
+          colEl.classList.remove('drop-indicator');
+        });
+        colEl.addEventListener('drop', (e) => {
+          e.preventDefault();
+          colEl.classList.remove('drop-indicator');
+          const cardId = e.dataTransfer.getData('text/plain');
+          if (cardId) {
+            moveCard(cardId, col.id);
+          }
+        });
+
+        container.appendChild(colEl);
+      });
+
+      // update undo button
+      document.getElementById('undoBtn').disabled = state.history.length === 0;
+    }
+
+    // edit mode (simple inline)
+    function startEdit(cardId) {
+      const card = findCardById(cardId);
+      if (!card) return;
+      const cardEl = document.querySelector(`.card[data-card-id="${cardId}"]`);
+      if (!cardEl) return;
+      // replace content with input
+      const existing = cardEl.querySelector('.card-edit');
+      if (existing) return;
+
+      const titleDiv = cardEl.querySelector('div');
+      const editWrap = document.createElement('div');
+      editWrap.className = 'card-edit';
+      const input = document.createElement('input');
+      input.value = card.title;
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'save';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'cancel';
+
+      editWrap.appendChild(input);
+      editWrap.appendChild(saveBtn);
+      editWrap.appendChild(cancelBtn);
+      cardEl.prepend(editWrap);
+      titleDiv.style.display = 'none';
+
+      input.focus();
+      input.select();
+
+      const cleanup = () => {
+        cardEl.querySelector('.card-edit')?.remove();
+        titleDiv.style.display = '';
+      };
+
+      saveBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editCard(cardId, input.value);
+        cleanup();
+      });
+      cancelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cleanup();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          editCard(cardId, input.value);
+          cleanup();
+        } else if (e.key === 'Escape') {
+          cleanup();
+        }
+        e.stopPropagation();
+      });
+    }
+
+    // ---------- search ----------
+    function setupSearch() {
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', (e) => {
+        state.filter = e.target.value.trim();
+        render();
+      });
+    }
+
+    // ---------- init ----------
+    function init() {
+      loadState();
+      loadTheme();
+      setupSearch();
+      document.getElementById('undoBtn').addEventListener('click', undoLast);
+      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+      render();
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>

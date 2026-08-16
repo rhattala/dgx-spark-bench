@@ -118,9 +118,14 @@ python3 harness/soak.py --concurrency 4 --minutes 10     # refuses without a the
 
 ## Honest limits
 
-- Several headline numbers are **n=1**. Re-running one front-end task varied the score by
-  about ±2 checks; timing by a few percent. Timing conclusions survive that spread, check-count
-  conclusions often do not.
+- **Harness precision, measured (2026-08-16, 4 tiers x 3 back-to-back runs):** widest check
+  spread on any single task was **1**; three of four tasks had **zero** variance. An earlier
+  claim of "+/-2 checks" was wrong — it came from runs spread across HOURS under different
+  load, not a controlled repeat. Across sessions the drift is larger than within one.
+- ⚠️ **Precision is not accuracy.** The same harness with near-zero variance ranked a kanban
+  board with **no add-card feature** above one that implemented it three times. A repeatable
+  instrument measuring the wrong thing returns the wrong answer, repeatably. Treat check
+  counts as a floor, and verify function in a browser before drawing quality conclusions.
 - Concurrency figures are **one-shot batch** (fire N, stop the clock when the last finishes),
   not steady-state. They are not comparable to published aggregate figures measured differently.
 - The two stacks **cannot run simultaneously** — they contend for the same hardware — so every

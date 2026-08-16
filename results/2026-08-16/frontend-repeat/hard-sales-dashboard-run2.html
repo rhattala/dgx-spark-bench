@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sales dashboard · inline svg</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6fb;
+            color: #1e1e2f;
+            transition: background 0.2s, color 0.2s;
+            padding: 1.2rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+        body.dark {
+            background: #0f1117;
+            color: #e9edf5;
+        }
+        .dashboard {
+            max-width: 1280px;
+            width: 100%;
+        }
+        /* KPI grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .kpi-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.2rem 1rem;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.03);
+            border: 1px solid #eef0f5;
+            transition: background 0.2s, border 0.2s;
+        }
+        body.dark .kpi-card {
+            background: #1e212b;
+            border-color: #2f3542;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+        }
+        .kpi-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .kpi-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .kpi-sub {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 0.3rem;
+        }
+        /* chart card */
+        .chart-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.5rem 1rem 1rem 1rem;
+            margin-bottom: 2rem;
+            border: 1px solid #eef0f5;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.02);
+        }
+        body.dark .chart-card {
+            background: #1e212b;
+            border-color: #2f3542;
+        }
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+        .svg-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        svg {
+            display: block;
+            min-width: 600px;  /* ensures legibility, scroll on small screens */
+            width: 100%;
+            height: auto;
+        }
+        .bar-tooltip {
+            position: absolute;
+            background: #1e1e2f;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            white-space: nowrap;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        body.dark .bar-tooltip {
+            background: #f0f2f8;
+            color: #1e1e2f;
+        }
+        /* table section */
+        .table-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.5rem 1rem;
+            border: 1px solid #eef0f5;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.02);
+        }
+        body.dark .table-card {
+            background: #1e212b;
+            border-color: #2f3542;
+        }
+        .table-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .search-box input {
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            border: 1px solid #d0d5e0;
+            background: #f9fafc;
+            font-size: 0.9rem;
+            width: 220px;
+            max-width: 100%;
+            outline: none;
+            transition: 0.2s;
+        }
+        body.dark .search-box input {
+            background: #2a2e3a;
+            border-color: #3a4050;
+            color: #eef2f9;
+        }
+        .search-box input:focus {
+            border-color: #4a7cf7;
+        }
+        .table-scroll {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid #eef0f5;
+        }
+        body.dark .table-scroll {
+            border-color: #2f3542;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;  /* horizontal scroll on small screens */
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            padding: 0.9rem 1rem;
+            background: #f8faff;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            white-space: nowrap;
+            border-bottom: 1px solid #e2e6ef;
+            transition: background 0.1s;
+        }
+        body.dark th {
+            background: #262b38;
+            border-bottom: 1px solid #343b4b;
+        }
+        th:hover {
+            background: #eef2fb;
+        }
+        body.dark th:hover {
+            background: #303747;
+        }
+        th .sort-ind {
+            display: inline-block;
+            margin-left: 6px;
+            opacity: 0.7;
+            font-size: 0.7rem;
+        }
+        td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #eef0f5;
+            white-space: nowrap;
+        }
+        body.dark td {
+            border-bottom: 1px solid #2a2f3c;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .status-badge {
+            background: #e9f0ff;
+            color: #2a5bd7;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        body.dark .status-badge {
+            background: #2f3b5c;
+            color: #b6c8ff;
+        }
+        /* theme toggle */
+        .theme-toggle {
+            background: #ffffff;
+            border: 1px solid #d0d5e0;
+            border-radius: 60px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        body.dark .theme-toggle {
+            background: #2a2e3a;
+            border-color: #3a4050;
+            color: #eef2f9;
+        }
+        .theme-toggle:hover {
+            border-color: #4a7cf7;
+        }
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 700px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+            body {
+                padding: 0.8rem;
+            }
+        }
+        @media (max-width: 380px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            .search-box input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- header + toggle -->
+    <div class="flex-row">
+        <h2 style="font-weight:600; letter-spacing:-0.3px;">📊 sales pulse</h2>
+        <button class="theme-toggle" id="themeToggle" aria-label="toggle theme">🌓 theme</button>
+    </div>
+
+    <!-- KPI tiles -->
+    <div class="kpi-grid" id="kpiGrid">
+        <!-- filled by JS -->
+    </div>
+
+    <!-- SVG bar chart -->
+    <div class="chart-card">
+        <div class="chart-title">monthly revenue · 2024</div>
+        <div class="svg-wrap" id="chartContainer">
+            <svg id="revenueChart" viewBox="0 0 640 280" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+    </div>
+
+    <!-- Table with search + sort -->
+    <div class="table-card">
+        <div class="table-header">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 filter by name, region, status...">
+            </div>
+            <span style="font-size:0.8rem; opacity:0.6;">click headers to sort</span>
+        </div>
+        <div class="table-scroll">
+            <table id="salesTable">
+                <thead id="tableHead">
+                    <tr>
+                        <th data-key="id" data-type="number">ID <span class="sort-ind"></span></th>
+                        <th data-key="customer" data-type="string">Customer <span class="sort-ind"></span></th>
+                        <th data-key="region" data-type="string">Region <span class="sort-ind"></span></th>
+                        <th data-key="amount" data-type="number">Amount <span class="sort-ind"></span></th>
+                        <th data-key="status" data-type="string">Status <span class="sort-ind"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- tooltip element -->
+<div class="bar-tooltip" id="barTooltip"></div>
+
+<script>
+    (function() {
+        // ---------- sample data ----------
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const revenue = [42000, 38500, 51000, 46800, 54000, 61000, 57500, 63200, 59800, 72000, 68900, 78500];
+
+        const salesRecords = [
+            { id: 1, customer: 'Acme Corp', region: 'North', amount: 12400, status: 'completed' },
+            { id: 2, customer: 'Globex', region: 'South', amount: 8900, status: 'pending' },
+            { id: 3, customer: 'Initech', region: 'West', amount: 15600, status: 'completed' },
+            { id: 4, customer: 'Umbrella', region: 'East', amount: 7300, status: 'cancelled' },
+            { id: 5, customer: 'Hooli', region: 'North', amount: 21000, status: 'completed' },
+            { id: 6, customer: 'Stark Ind.', region: 'West', amount: 9800, status: 'pending' },
+            { id: 7, customer: 'Wayne Ent.', region: 'East', amount: 16700, status: 'completed' },
+            { id: 8, customer: 'Cyberdyne', region: 'South', amount: 14200, status: 'completed' }
+        ];
+
+        // ---------- theme ----------
+        const root = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const storedTheme = localStorage.getItem('salesTheme');
+        if (storedTheme === 'dark') {
+            document.body.classList.add('dark');
+        }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('salesTheme', isDark ? 'dark' : 'light');
+        });
+
+        // ---------- KPI tiles ----------
+        const kpiGrid = document.getElementById('kpiGrid');
+        const totalRevenue = revenue.reduce((a,b)=>a+b,0);
+        const avgOrder = Math.round(totalRevenue / salesRecords.length);
+        const completedCount = salesRecords.filter(r=>r.status==='completed').length;
+        const pendingCount = salesRecords.filter(r=>r.status==='pending').length;
+        const kpis = [
+            { label: 'total revenue', value: '$' + totalRevenue.toLocaleString(), sub: '12 months' },
+            { label: 'avg order', value: '$' + avgOrder.toLocaleString(), sub: 'per sale' },
+            { label: 'completed', value: completedCount, sub: 'orders' },
+            { label: 'pending', value: pendingCount, sub: 'needs action' }
+        ];
+        kpiGrid.innerHTML = kpis.map(k => `
+            <div class="kpi-card">
+                <div class="kpi-label">${k.label}</div>
+                <div class="kpi-value">${k.value}</div>
+                <div class="kpi-sub">${k.sub}</div>
+            </div>
+        `).join('');
+
+        // ---------- SVG bar chart (pure inline) ----------
+        const svg = document.getElementById('revenueChart');
+        const tooltip = document.getElementById('barTooltip');
+        const NS = 'http://www.w3.org/2000/svg';
+        const W = 640, H = 280;
+        const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+        const innerW = W - margin.left - margin.right;
+        const innerH = H - margin.top - margin.bottom;
+        const maxVal = Math.max(...revenue) * 1.1;
+        const barWidth = (innerW / 12) * 0.65;
+        const step = innerW / 12;
+
+        // background grid lines (light)
+        function drawGrid() {
+            for (let i=0; i<=4; i++) {
+                const y = margin.top + (innerH * i/4);
+                const line = document.createElementNS(NS, 'line');
+                line.setAttribute('x1', margin.left);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', W - margin.right);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', '#d8dee9');
+                line.setAttribute('stroke-width', '0.5');
+                line.setAttribute('stroke-dasharray', '4 4');
+                svg.appendChild(line);
+                // y labels
+                const val = maxVal - (maxVal * i/4);
+                const txt = document.createElementNS(NS, 'text');
+                txt.setAttribute('x', margin.left - 10);
+                txt.setAttribute('y', y + 4);
+                txt.setAttribute('text-anchor', 'end');
+                txt.setAttribute('font-size', '10');
+                txt.setAttribute('fill', '#6b7280');
+                txt.textContent = '$' + Math.round(val/1000) + 'k';
+                svg.appendChild(txt);
+            }
+        }
+        drawGrid();
+
+        // bars + tooltip
+        revenue.forEach((val, idx) => {
+            const x = margin.left + idx * step + (step - barWidth)/2;
+            const h = (val / maxVal) * innerH;
+            const y = margin.top + innerH - h;
+            const rect = document.createElementNS(NS, 'rect');
+            rect.setAttribute('x', x);
+            rect.setAttribute('y', y);
+            rect.setAttribute('width', barWidth);
+            rect.setAttribute('height', h);
+            rect.setAttribute('rx', '6');
+            rect.setAttribute('fill', '#4a7cf7');
+            rect.setAttribute('opacity', '0.9');
+            rect.setAttribute('data-month', months[idx]);
+            rect.setAttribute('data-value', '$' + val.toLocaleString());
+            rect.style.transition = 'opacity 0.2s';
+            rect.addEventListener('mouseenter', (e) => {
+                tooltip.style.opacity = '1';
+                tooltip.style.left = (e.clientX + 12) + 'px';
+                tooltip.style.top = (e.clientY - 10) + 'px';
+                tooltip.textContent = `${months[idx]} · $${val.toLocaleString()}`;
+                rect.setAttribute('fill', '#2f5ce0');
+            });
+            rect.addEventListener('mousemove', (e) => {
+                tooltip.style.left = (e.clientX + 12) + 'px';
+                tooltip.style.top = (e.clientY - 10) + 'px';
+            });
+            rect.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0';
+                rect.setAttribute('fill', '#4a7cf7');
+            });
+            svg.appendChild(rect);
+
+            // x-axis labels
+            const txt = document.createElementNS(NS, 'text');
+            txt.setAttribute('x', x + barWidth/2);
+            txt.setAttribute('y', H - 15);
+            txt.setAttribute('text-anchor', 'middle');
+            txt.setAttribute('font-size', '10');
+            txt.setAttribute('fill', '#6b7280');
+            txt.textContent = months[idx];
+            svg.appendChild(txt);
+        });
+
+        // axis lines
+        const axisX = document.createElementNS(NS, 'line');
+        axisX.setAttribute('x1', margin.left);
+        axisX.setAttribute('y1', H - margin.bottom + 5);
+        axisX.setAttribute('x2', W - margin.right);
+        axisX.setAttribute('y2', H - margin.bottom + 5);
+        axisX.setAttribute('stroke', '#9aa3b2');
+        axisX.setAttribute('stroke-width', '1');
+        svg.appendChild(axisX);
+
+        // ---------- table logic ----------
+        let currentSort = { key: 'id', dir: 'asc' };
+        let filterText = '';
+
+        const tbody = document.getElementById('tableBody');
+        const ths = document.querySelectorAll('#tableHead th');
+
+        function renderTable() {
+            let filtered = salesRecords.filter(r => {
+                if (!filterText) return true;
+                const q = filterText.toLowerCase();
+                return r.customer.toLowerCase().includes(q) || 
+                       r.region.toLowerCase().includes(q) || 
+                       r.status.toLowerCase().includes(q) ||
+                       r.id.toString().includes(q);
+            });
+
+            // sort
+            const { key, dir } = currentSort;
+            filtered.sort((a, b) => {
+                let va = a[key], vb = b[key];
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return dir === 'asc' ? -1 : 1;
+                if (va > vb) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            tbody.innerHTML = filtered.map(r => `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>${r.customer}</td>
+                    <td>${r.region}</td>
+                    <td>$${r.amount.toLocaleString()}</td>
+                    <td><span class="status-badge">${r.status}</span></td>
+                </tr>
+            `).join('');
+
+            // update sort indicators
+            ths.forEach(th => {
+                const keyAttr = th.dataset.key;
+                const span = th.querySelector('.sort-ind');
+                if (keyAttr === key) {
+                    span.textContent = dir === 'asc' ? '▲' : '▼';
+                } else {
+                    span.textContent = '';
+                }
+            });
+        }
+
+        // header click sorting
+        ths.forEach(th => {
+            th.addEventListener('click', () => {
+                const key = th.dataset.key;
+                const type = th.dataset.type;
+                if (currentSort.key === key) {
+                    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.key = key;
+                    currentSort.dir = 'asc';
+                }
+                renderTable();
+            });
+        });
+
+        // search filter
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            filterText = e.target.value.trim();
+            renderTable();
+        });
+
+        // initial render
+        renderTable();
+
+        // adjust tooltip on scroll (no need, but keep)
+        window.addEventListener('scroll', () => { tooltip.style.opacity = '0'; });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Pricing · responsive</title>
+  <style>
+    /* ---------- reset / base ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 1.5rem;
+      background: #f6f8fc;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* ---------- light & dark via prefers ---------- */
+    :root {
+      --bg: #f6f8fc;
+      --card-bg: #ffffff;
+      --text: #1a2634;
+      --muted: #5b6b7c;
+      --border: #e2e8f0;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+      --btn-bg: #1e293b;
+      --btn-text: #ffffff;
+      --btn-hover: #0f172a;
+      --pro-badge-bg: #eef2ff;
+      --pro-badge-text: #4338ca;
+      --pro-border: #c7d2fe;
+      --pro-glow: 0 20px 40px -12px rgba(79, 70, 229, 0.25);
+      --feature-icon: #16a34a;
+      --divider: #eef2f6;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --card-bg: #111a2c;
+        --text: #e6edf6;
+        --muted: #9aa9bb;
+        --border: #2a3a52;
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+        --btn-bg: #dbe4f0;
+        --btn-text: #0b1220;
+        --btn-hover: #ffffff;
+        --pro-badge-bg: #1e2a4a;
+        --pro-badge-text: #b3c7ff;
+        --pro-border: #3b4f7a;
+        --pro-glow: 0 20px 45px -10px rgba(99, 102, 241, 0.4);
+        --feature-icon: #4ade80;
+        --divider: #1f2b3f;
+      }
+    }
+
+    /* ---------- layout ---------- */
+    .pricing-wrapper {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    /* ---------- card ---------- */
+    .price-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem 1.8rem 2rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+
+    .price-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.12);
+    }
+
+    /* highlighted plan */
+    .price-card.recommended {
+      border: 2px solid var(--pro-border);
+      background: var(--card-bg);
+      box-shadow: var(--pro-glow);
+      padding-top: 2.5rem;
+    }
+
+    .recommended-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--pro-badge-bg);
+      color: var(--pro-badge-text);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 0.35rem 1rem;
+      border-radius: 30px;
+      border: 1px solid var(--pro-border);
+      white-space: nowrap;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    /* plan name + price */
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .price {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--text);
+      display: flex;
+      align-items: baseline;
+      gap: 0.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .price small {
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    .price-period {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+    }
+
+    /* feature list */
+    .feature-list {
+      list-style: none;
+      margin: 1.2rem 0 2rem;
+      flex: 1;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.5rem 0;
+      color: var(--text);
+      font-size: 0.95rem;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+
+    .feature-icon {
+      color: var(--feature-icon);
+      font-weight: 700;
+      font-size: 1.1rem;
+      line-height: 1.2;
+      min-width: 1.2rem;
+      text-align: center;
+    }
+
+    /* CTA button */
+    .cta-btn {
+      display: block;
+      width: 100%;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      border-radius: 60px;
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s;
+      text-align: center;
+      text-decoration: none;
+      margin-top: 0.5rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .cta-btn:hover {
+      background: var(--btn-hover);
+      transform: scale(1.01);
+    }
+
+    .cta-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* recommended button accent */
+    .price-card.recommended .cta-btn {
+      background: #4f46e5;
+      color: white;
+      box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.5);
+    }
+
+    .price-card.recommended .cta-btn:hover {
+      background: #4338ca;
+    }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 900px) {
+      .pricing-grid {
+        gap: 1.2rem;
+      }
+      .price-card {
+        padding: 1.8rem 1.2rem;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+      .price-card {
+        padding: 2rem 1.8rem;
+      }
+      .recommended {
+        order: -1;  /* show pro first on mobile? optional, but keep order: starter, pro, enterprise */
+        /* we keep natural order, but pro highlight remains */
+      }
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 0.75rem;
+      }
+      .price-card {
+        padding: 1.8rem 1.2rem;
+        border-radius: 20px;
+      }
+      .price {
+        font-size: 2.6rem;
+      }
+      .feature-list li {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* 320px exact */
+    @media (max-width: 320px) {
+      .pricing-grid {
+        gap: 1rem;
+      }
+      .price-card {
+        padding: 1.5rem 1rem;
+      }
+      .price {
+        font-size: 2.4rem;
+      }
+      .plan-name {
+        font-size: 0.95rem;
+      }
+      .cta-btn {
+        padding: 0.8rem 0.8rem;
+        font-size: 0.95rem;
+      }
+      .recommended-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pricing-wrapper">
+    <div class="pricing-grid">
+      
+      <!-- Starter -->
+      <div class="price-card">
+        <div class="plan-name">Starter</div>
+        <div class="price">$9 <small>/mo</small></div>
+        <div class="price-period">per month, billed monthly</div>
+        <ul class="feature-list">
+          <li><span class="feature-icon">✓</span> 1 project</li>
+          <li><span class="feature-icon">✓</span> 3 GB storage</li>
+          <li><span class="feature-icon">✓</span> Community support</li>
+          <li><span class="feature-icon">✓</span> Basic analytics</li>
+        </ul>
+        <button class="cta-btn" type="button">Choose Starter</button>
+      </div>
+
+      <!-- Pro (recommended) -->
+      <div class="price-card recommended">
+        <div class="recommended-badge">★ RECOMMENDED</div>
+        <div class="plan-name">Pro</div>
+        <div class="price">$29 <small>/mo</small></div>
+        <div class="price-period">per month, billed monthly</div>
+        <ul class="feature-list">
+          <li><span class="feature-icon">✓</span> Unlimited projects</li>
+          <li><span class="feature-icon">✓</span> 50 GB storage</li>
+          <li><span class="feature-icon">✓</span> Priority support</li>
+          <li><span class="feature-icon">✓</span> Advanced analytics</li>
+        </ul>
+        <button class="cta-btn" type="button">Choose Pro</button>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="price-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="price">$99 <small>/mo</small></div>
+        <div class="price-period">per month, billed annually</div>
+        <ul class="feature-list">
+          <li><span class="feature-icon">✓</span> Unlimited everything</li>
+          <li><span class="feature-icon">✓</span> 1 TB storage</li>
+          <li><span class="feature-icon">✓</span> 24/7 dedicated support</li>
+          <li><span class="feature-icon">✓</span> Custom integrations</li>
+        </ul>
+        <button class="cta-btn" type="button">Contact Sales</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- tiny script for interactive feel (no external) -->
+  <script>
+    (function() {
+      // simple click feedback (no framework)
+      const buttons = document.querySelectorAll('.cta-btn');
+      for (let btn of buttons) {
+        btn.addEventListener('click', function(e) {
+          const plan = this.closest('.price-card')?.querySelector('.plan-name')?.innerText || 'plan';
+          // subtle alert – but we avoid intrusive alert; just update button text temporarily
+          const originalText = this.innerText;
+          this.innerText = '✓ ' + plan + ' selected';
+          this.style.opacity = '0.8';
+          setTimeout(() => {
+            this.innerText = originalText;
+            this.style.opacity = '1';
+          }, 1200);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

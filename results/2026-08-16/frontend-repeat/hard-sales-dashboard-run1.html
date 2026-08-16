@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sales dashboard · inline svg</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f6fb;
+            color: #1e1e2f;
+            padding: 1.2rem;
+            min-height: 100vh;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        body.dark {
+            background: #0f1117;
+            color: #e7e9f0;
+        }
+
+        .dashboard {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* header + toggle */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .topbar h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .theme-btn {
+            background: #2b3a67;
+            border: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        body.dark .theme-btn {
+            background: #a6b3d9;
+            color: #0f1117;
+        }
+
+        .theme-btn:hover {
+            opacity: 0.85;
+        }
+
+        /* KPI cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.2rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        body.dark .kpi-card {
+            background: #1c1f2b;
+            border-color: #2c3040;
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            opacity: 0.7;
+            margin-bottom: 0.4rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .kpi-sub {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 0.3rem;
+        }
+
+        /* chart card */
+        .chart-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.2rem 1rem 0.8rem 1rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        body.dark .chart-card {
+            background: #1c1f2b;
+            border-color: #2c3040;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            padding-left: 0.2rem;
+        }
+
+        .svg-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .bar-chart {
+            display: block;
+            width: 100%;
+            min-width: 600px;  /* allow horizontal scroll on tiny screens */
+            height: auto;
+        }
+
+        .bar {
+            fill: #4f6df5;
+            transition: fill 0.15s;
+        }
+
+        body.dark .bar {
+            fill: #7b93ff;
+        }
+
+        .bar:hover {
+            fill: #ff9f4b;
+        }
+
+        .axis-label {
+            font-size: 11px;
+            fill: #6b7280;
+        }
+
+        body.dark .axis-label {
+            fill: #b0b7c9;
+        }
+
+        .tooltip-group {
+            pointer-events: none;
+        }
+
+        .tooltip-rect {
+            fill: #1e1e2f;
+            rx: 6px;
+        }
+
+        body.dark .tooltip-rect {
+            fill: #e7e9f0;
+        }
+
+        .tooltip-text {
+            fill: white;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        body.dark .tooltip-text {
+            fill: #0f1117;
+        }
+
+        /* table section */
+        .table-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.2rem 1rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        body.dark .table-card {
+            background: #1c1f2b;
+            border-color: #2c3040;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            background: #f0f2f8;
+            border: 1px solid #d0d5e8;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            width: 220px;
+            max-width: 100%;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        body.dark .search-box {
+            background: #2a2e3d;
+            border-color: #3d4257;
+            color: white;
+        }
+
+        .search-box::placeholder {
+            opacity: 0.6;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            border-radius: 16px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 600px;  /* triggers horizontal scroll on small screens */
+        }
+
+        th {
+            text-align: left;
+            padding: 0.8rem 0.6rem;
+            background: #f8faff;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            white-space: nowrap;
+            border-bottom: 2px solid #e0e4f0;
+            transition: background 0.1s;
+        }
+
+        body.dark th {
+            background: #252a3a;
+            border-bottom-color: #3a4055;
+        }
+
+        th:hover {
+            background: #e9edf9;
+        }
+
+        body.dark th:hover {
+            background: #2f3547;
+        }
+
+        th .sort-ind {
+            display: inline-block;
+            margin-left: 6px;
+            opacity: 0.7;
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 0.7rem 0.6rem;
+            border-bottom: 1px solid #eef1f8;
+            white-space: nowrap;
+        }
+
+        body.dark td {
+            border-bottom-color: #2c3040;
+        }
+
+        tbody tr:hover {
+            background: #f6f8ff;
+        }
+
+        body.dark tbody tr:hover {
+            background: #262b3b;
+        }
+
+        .status-badge {
+            background: #e5f2e9;
+            color: #1d6b3a;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        body.dark .status-badge {
+            background: #1e3a2a;
+            color: #9ed4b0;
+        }
+
+        /* responsive */
+        @media (max-width: 700px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .topbar h1 {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 0.8rem;
+            }
+        }
+
+        /* ensure 320px support */
+        .dashboard {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="topbar">
+            <h1>📊 pulse sales</h1>
+            <button class="theme-btn" id="themeToggle" aria-label="toggle theme">🌙 dark</button>
+        </div>
+
+        <!-- KPI tiles -->
+        <div class="kpi-grid" id="kpiContainer">
+            <div class="kpi-card"><div class="kpi-label">total revenue</div><div class="kpi-value" id="kpiRevenue">$0</div><div class="kpi-sub">vs last month +12%</div></div>
+            <div class="kpi-card"><div class="kpi-label">orders</div><div class="kpi-value" id="kpiOrders">0</div><div class="kpi-sub">+8.2%</div></div>
+            <div class="kpi-card"><div class="kpi-label">avg. order</div><div class="kpi-value" id="kpiAvg">$0</div><div class="kpi-sub">+3.1%</div></div>
+            <div class="kpi-card"><div class="kpi-label">conversion</div><div class="kpi-value" id="kpiConv">0%</div><div class="kpi-sub">-0.4%</div></div>
+        </div>
+
+        <!-- SVG bar chart -->
+        <div class="chart-card">
+            <div class="chart-title">monthly revenue · 12 months</div>
+            <div class="svg-wrapper" id="chartWrapper">
+                <!-- inline SVG injected by JS -->
+            </div>
+        </div>
+
+        <!-- sortable + filterable table -->
+        <div class="table-card">
+            <div class="table-header">
+                <span style="font-weight:600;">recent sales</span>
+                <input type="text" class="search-box" id="searchInput" placeholder="🔍 filter by name, product...">
+            </div>
+            <div class="table-scroll">
+                <table id="salesTable">
+                    <thead>
+                        <tr>
+                            <th data-key="customer">customer <span class="sort-ind"></span></th>
+                            <th data-key="product">product <span class="sort-ind"></span></th>
+                            <th data-key="amount">amount <span class="sort-ind"></span></th>
+                            <th data-key="status">status <span class="sort-ind"></span></th>
+                            <th data-key="date">date <span class="sort-ind"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- sample data ----------
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const revenueData = [42000, 38500, 51000, 46800, 53200, 61000, 58700, 64200, 71500, 68900, 75800, 82300];
+
+            const sales = [
+                { customer: 'Ava Thompson', product: 'Wireless Headphones', amount: 249.99, status: 'completed', date: '2025-05-12' },
+                { customer: 'Liam Chen', product: 'Smart Watch', amount: 399.00, status: 'pending', date: '2025-05-11' },
+                { customer: 'Sophia Patel', product: 'Laptop Stand', amount: 89.50, status: 'completed', date: '2025-05-10' },
+                { customer: 'Noah Williams', product: 'Mechanical Keyboard', amount: 159.99, status: 'refunded', date: '2025-05-09' },
+                { customer: 'Emma Johnson', product: 'USB-C Hub', amount: 79.99, status: 'completed', date: '2025-05-08' },
+                { customer: 'Oliver Brown', product: 'Monitor 27"', amount: 329.00, status: 'completed', date: '2025-05-07' },
+                { customer: 'Mia Garcia', product: 'Desk Lamp', amount: 45.30, status: 'pending', date: '2025-05-06' },
+                { customer: 'Ethan Miller', product: 'Webcam Pro', amount: 129.00, status: 'completed', date: '2025-05-05' }
+            ];
+
+            // ---------- theme ----------
+            const root = document.documentElement;
+            const themeBtn = document.getElementById('themeToggle');
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme === 'dark') {
+                document.body.classList.add('dark');
+                themeBtn.textContent = '☀️ light';
+            } else {
+                document.body.classList.remove('dark');
+                themeBtn.textContent = '🌙 dark';
+            }
+
+            themeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('dark');
+                const isDark = document.body.classList.contains('dark');
+                themeBtn.textContent = isDark ? '☀️ light' : '🌙 dark';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+
+            // ---------- KPI update ----------
+            function updateKPI() {
+                const totalRevenue = revenueData.reduce((a, b) => a + b, 0);
+                const totalOrders = 1284; // sample
+                const avgOrder = totalRevenue / totalOrders;
+                const conv = 3.6;
+                document.getElementById('kpiRevenue').textContent = '$' + totalRevenue.toLocaleString();
+                document.getElementById('kpiOrders').textContent = totalOrders.toLocaleString();
+                document.getElementById('kpiAvg').textContent = '$' + avgOrder.toFixed(2);
+                document.getElementById('kpiConv').textContent = conv + '%';
+            }
+            updateKPI();
+
+            // ---------- SVG bar chart (pure inline) ----------
+            function buildChart() {
+                const wrapper = document.getElementById('chartWrapper');
+                const width = 760, height = 260;
+                const padding = { top: 20, right: 20, bottom: 40, left: 60 };
+                const chartWidth = width - padding.left - padding.right;
+                const chartHeight = height - padding.top - padding.bottom;
+                const maxVal = Math.max(...revenueData);
+                const barWidth = chartWidth / 12 * 0.6;
+                const gap = chartWidth / 12;
+
+                let svg = `<svg class="bar-chart" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="monthly revenue bar chart">`;
+                // grid lines + y axis labels
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding.top + chartHeight - (i / 4) * chartHeight;
+                    const val = Math.round(maxVal * i / 4);
+                    svg += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#d0d5e8" stroke-width="0.6" stroke-dasharray="3 3" />`;
+                    svg += `<text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="axis-label">$${val/1000}k</text>`;
+                }
+                // x axis labels
+                months.forEach((m, i) => {
+                    const x = padding.left + i * gap + gap/2;
+                    svg += `<text x="${x}" y="${height - padding.bottom + 20}" text-anchor="middle" class="axis-label">${m}</text>`;
+                });
+
+                // bars + tooltips (group per bar)
+                revenueData.forEach((value, i) => {
+                    const x = padding.left + i * gap + (gap - barWidth) / 2;
+                    const barHeight = (value / maxVal) * chartHeight;
+                    const y = padding.top + chartHeight - barHeight;
+                    svg += `<rect class="bar" x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" />`;
+                    // tooltip group (hidden by default, shown on hover)
+                    const tooltipX = x + barWidth/2;
+                    const tooltipY = y - 8;
+                    svg += `<g class="tooltip-group" style="opacity:0; transition: opacity 0.1s;">
+                        <rect x="${tooltipX - 34}" y="${tooltipY - 18}" width="68" height="20" fill="#1e1e2f" rx="4" />
+                        <text x="${tooltipX}" y="${tooltipY - 4}" text-anchor="middle" fill="white" font-size="10" font-weight="500">$${value.toLocaleString()}</text>
+                    </g>`;
+                    // hover trigger using <title> inside rect? but we need custom tooltip. use mouseover via JS? simpler: use <title> for native tooltip, but requirement says hover tooltips. we'll use JS event delegation.
+                    // we'll attach data-index to rect and handle mouseover.
+                    // replace previous rect with data-index
+                });
+
+                // rebuild with data-index for tooltip control
+                svg = `<svg class="bar-chart" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="monthly revenue bar chart">`;
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding.top + chartHeight - (i / 4) * chartHeight;
+                    const val = Math.round(maxVal * i / 4);
+                    svg += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#d0d5e8" stroke-width="0.6" stroke-dasharray="3 3" />`;
+                    svg += `<text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="axis-label">$${val/1000}k</text>`;
+                }
+                months.forEach((m, i) => {
+                    const x = padding.left + i * gap + gap/2;
+                    svg += `<text x="${x}" y="${height - padding.bottom + 20}" text-anchor="middle" class="axis-label">${m}</text>`;
+                });
+                revenueData.forEach((value, i) => {
+                    const x = padding.left + i * gap + (gap - barWidth) / 2;
+                    const barHeight = (value / maxVal) * chartHeight;
+                    const y = padding.top + chartHeight - barHeight;
+                    svg += `<rect class="bar" data-index="${i}" x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" />`;
+                    const tooltipX = x + barWidth/2;
+                    const tooltipY = y - 8;
+                    svg += `<g class="tooltip-group" id="tooltip-${i}" style="opacity:0; pointer-events:none;">
+                        <rect x="${tooltipX - 34}" y="${tooltipY - 18}" width="68" height="20" fill="#1e1e2f" rx="4" />
+                        <text x="${tooltipX}" y="${tooltipY - 4}" text-anchor="middle" fill="white" font-size="10" font-weight="500">$${value.toLocaleString()}</text>
+                    </g>`;
+                });
+                svg += `</svg>`;
+                wrapper.innerHTML = svg;
+
+                // attach hover events
+                const bars = wrapper.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    bar.addEventListener('mouseenter', (e) => {
+                        const idx = bar.dataset.index;
+                        const tooltip = document.getElementById(`tooltip-${idx}`);
+                        if (tooltip) tooltip.style.opacity = '1';
+                    });
+                    bar.addEventListener('mouseleave', (e) => {
+                        const idx = bar.dataset.index;
+                        const tooltip = document.getElementById(`tooltip-${idx}`);
+                        if (tooltip) tooltip.style.opacity = '0';
+                    });
+                });
+            }
+            buildChart();
+
+            // ---------- table sort & filter ----------
+            let currentSort = { key: 'date', dir: 'desc' }; // default sort by date desc
+            let filteredSales = [...sales];
+
+            const tbody = document.getElementById('tableBody');
+            const searchInput = document.getElementById('searchInput');
+            const ths = document.querySelectorAll('th[data-key]');
+
+            function renderTable() {
+                const rows = filteredSales.map(sale => {
+                    return `<tr>
+                        <td>${sale.customer}</td>
+                        <td>${sale.product}</td>
+                        <td>$${sale.amount.toFixed(2)}</td>
+                        <td><span class="status-badge">${sale.status}</span></td>
+                        <td>${sale.date}</td>
+                    </tr>`;
+                }).join('');
+                tbody.innerHTML = rows;
+                updateSortIndicators();
+            }
+
+            function updateSortIndicators() {
+                ths.forEach(th => {
+                    const key = th.dataset.key;
+                    const span = th.querySelector('.sort-ind');
+                    if (currentSort.key === key) {
+                        span.textContent = currentSort.dir === 'asc' ? '▲' : '▼';
+                    } else {
+                        span.textContent = '';
+                    }
+                });
+            }
+
+            function sortData() {
+                const { key, dir } = currentSort;
+                filteredSales.sort((a, b) => {
+                    let valA = a[key];
+                    let valB = b[key];
+                    if (key === 'amount') {
+                        valA = parseFloat(valA);
+                        valB = parseFloat(valB);
+                    } else {
+                        valA = String(valA).toLowerCase();
+                        valB = String(valB).toLowerCase();
+                    }
+                    if (valA < valB) return dir === 'asc' ? -1 : 1;
+                    if (valA > valB) return dir === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            function applyFilterAndSort() {
+                const query = searchInput.value.trim().toLowerCase();
+                if (query === '') {
+                    filteredSales = [...sales];
+                } else {
+                    filteredSales = sales.filter(sale => 
+                        sale.customer.toLowerCase().includes(query) ||
+                        sale.product.toLowerCase().includes(query) ||
+                        sale.status.toLowerCase().includes(query) ||
+                        sale.date.includes(query)
+                    );
+                }
+                sortData();
+                renderTable();
+            }
+
+            // initial sort (date desc)
+            sortData();
+            renderTable();
+
+            // event listeners
+            ths.forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.key;
+                    if (currentSort.key === key) {
+                        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort.key = key;
+                        currentSort.dir = 'asc';
+                    }
+                    applyFilterAndSort();
+                });
+            });
+
+            searchInput.addEventListener('input', applyFilterAndSort);
+
+            // ---------- responsive: ensure chart scroll on 320px ----------
+            // already handled by .svg-wrapper overflow-x: auto; .bar-chart min-width:600px
+        })();
+    </script>
+</body>
+</html>
