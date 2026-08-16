@@ -1,0 +1,20 @@
+=== NIAH: 4 sizes x 3 depths = 12 probes ===
+  needle is RANDOM per probe (unguessable); each prompt carries a unique session id
+  target    depth  actual    secs      result
+  8000      0.05   4829      3.4       PASS
+  8000      0.50   4826      2.8       PASS
+  8000      0.95   4826      2.8       PASS
+  32000     0.05   19216     10.4      PASS
+  32000     0.50   19211     10.1      PASS
+  32000     0.95   19213     9.9       PASS
+  124000    0.05   74233     42.9      PASS
+  124000    0.50   74231     40.1      FAIL  got='SPARK-NIAH-MKCBSUN'
+  124000    0.95   74232     39.2      PASS
+  248000    0.05   148431    85.7      PASS
+  248000    0.50   148429    83.9      PASS
+  248000    0.95   148434    83.6      FAIL  got='SPARK-NIA0-OUUR0XIR'
+
+============================================================
+  NIAH 10/12 passed
+  deepest passing context: 148431 prompt tokens
+  saved -> results/2026-08-16/niah-deepseek.json

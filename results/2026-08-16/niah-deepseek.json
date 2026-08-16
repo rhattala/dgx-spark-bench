@@ -1,0 +1,117 @@
+{
+ "label": "deepseek-0731-uncapped",
+ "model": "deepseek-v4-flash-dspark",
+ "passed": 10,
+ "graded": 12,
+ "unverified": 0,
+ "probes": [
+  {
+   "target": 8000,
+   "depth": 0.05,
+   "pass": true,
+   "prompt_tokens": 4829,
+   "secs": 3.4,
+   "answer": "SPARK-NIAH-HSYCCEPH",
+   "needle": "SPARK-NIAH-HSYCCEPH"
+  },
+  {
+   "target": 8000,
+   "depth": 0.5,
+   "pass": true,
+   "prompt_tokens": 4826,
+   "secs": 2.8,
+   "answer": "SPARK-NIAH-YGPRPA4B",
+   "needle": "SPARK-NIAH-YGPRPA4B"
+  },
+  {
+   "target": 8000,
+   "depth": 0.95,
+   "pass": true,
+   "prompt_tokens": 4826,
+   "secs": 2.8,
+   "answer": "SPARK-NIAH-QGGSWZYQ",
+   "needle": "SPARK-NIAH-QGGSWZYQ"
+  },
+  {
+   "target": 32000,
+   "depth": 0.05,
+   "pass": true,
+   "prompt_tokens": 19216,
+   "secs": 10.4,
+   "answer": "SPARK-NIAH-8P1R6UH5",
+   "needle": "SPARK-NIAH-8P1R6UH5"
+  },
+  {
+   "target": 32000,
+   "depth": 0.5,
+   "pass": true,
+   "prompt_tokens": 19211,
+   "secs": 10.1,
+   "answer": "SPARK-NIAH-44ZENBRB",
+   "needle": "SPARK-NIAH-44ZENBRB"
+  },
+  {
+   "target": 32000,
+   "depth": 0.95,
+   "pass": true,
+   "prompt_tokens": 19213,
+   "secs": 9.9,
+   "answer": "SPARK-NIAH-EUQ2PQPH",
+   "needle": "SPARK-NIAH-EUQ2PQPH"
+  },
+  {
+   "target": 124000,
+   "depth": 0.05,
+   "pass": true,
+   "prompt_tokens": 74233,
+   "secs": 42.9,
+   "answer": "SPARK-NIAH-PECSXK0P",
+   "needle": "SPARK-NIAH-PECSXK0P"
+  },
+  {
+   "target": 124000,
+   "depth": 0.5,
+   "pass": false,
+   "prompt_tokens": 74231,
+   "secs": 40.1,
+   "answer": "SPARK-NIAH-MKCBSUN",
+   "needle": "SPARK-NIAH-MKCBSUN6"
+  },
+  {
+   "target": 124000,
+   "depth": 0.95,
+   "pass": true,
+   "prompt_tokens": 74232,
+   "secs": 39.2,
+   "answer": "SPARK-NIAH-GOTM1YIR",
+   "needle": "SPARK-NIAH-GOTM1YIR"
+  },
+  {
+   "target": 248000,
+   "depth": 0.05,
+   "pass": true,
+   "prompt_tokens": 148431,
+   "secs": 85.7,
+   "answer": "SPARK-NIAH-V53W37MY",
+   "needle": "SPARK-NIAH-V53W37MY"
+  },
+  {
+   "target": 248000,
+   "depth": 0.5,
+   "pass": true,
+   "prompt_tokens": 148429,
+   "secs": 83.9,
+   "answer": "SPARK-NIAH-DECJFGNM",
+   "needle": "SPARK-NIAH-DECJFGNM"
+  },
+  {
+   "target": 248000,
+   "depth": 0.95,
+   "pass": false,
+   "prompt_tokens": 148434,
+   "secs": 83.6,
+   "answer": "SPARK-NIA0-OUUR0XIR",
+   "needle": "SPARK-NIAH-OUUR0XIR"
+  }
+ ]
+}
