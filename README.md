@@ -30,6 +30,7 @@ the distinction changes every sizing calculation.
 | `harness/niah.py` | long-context retrieval — random unguessable needles, cache-defeating |
 | `tools/acceptance-probe.py` | speculative-decoding health by **per-position profile**, not by a bare percentage |
 | `tools/clock-parity.py` | asserts every node shares one clock policy — **must run under load** |
+| `tools/thermal-guard.py` | cap-on-hot / release-on-cool, with ownership, self-limit and liveness |
 
 ## Operational checks
 
@@ -75,7 +76,34 @@ The clock *achieved while working* is the only evidence that exists, so the tool
 real generation and samples during it. With no engine to load the GPUs it returns
 **UNVERIFIED (rc=2)** — there is deliberately no idle fallback.
 
-Both tools were verified by **execution, not inspection**: the parity check was proven by
+### `tools/thermal-guard.py` — a loop that re-asserts state needs an owner
+
+One job: cap the clock above `--trip`, release it after `--clear-cycles` samples below
+`--clear`. It never touches the engine or any service — a guard that can stop your serving
+stack is a bigger hazard than the heat it prevents.
+
+It exists in this shape because of one incident: a verify-and-reapply loop re-asserted an
+admission gate every 5 s, correctly and tirelessly, **on behalf of a test unit that should
+have been dead**. The loop wasn't buggy — it had no concept of "I should not be running."
+So this one carries four defences: an flock (one owner, ever), a `--max-runtime` self-limit,
+a heartbeat whose `--status` says **UNVERIFIED (rc=2)** rather than "ok" when stale, and
+release-only-what-it-applied so exiting can't strip an operator's deliberate cap.
+
+Proven by execution on a live node in `--dry-run` (no clocks touched):
+
+| test | result |
+|---|---|
+| trip fires (`--test-trip 30` at 70 °C) | applied ✅ |
+| second instance | refused, rc=1 ✅ |
+| `--status` while alive | OK, rc=0 ✅ |
+| SIGTERM | released what it applied, rc=1 STOPPED ✅ |
+| **SIGKILL then wait** | UNVERIFIED rc=2 — "you are not protected" ✅ |
+
+⚠️ **That last test also exposed the honest limit:** staleness detection has a blind
+window of `interval × 6`. A hard-killed guard read "OK" for ~12 s at `--interval 2`, ~30 s
+at the default. One OK is not proof of protection during an incident.
+
+All three tools were verified by **execution, not inspection**: the parity check was proven by
 re-applying a cap to one node on purpose (caught a 539 MHz spread), and both `--self-test`
 suites were re-run against deliberately-broken copies to confirm they fail loudly.
 
@@ -178,6 +206,7 @@ different prompts or clock states are **not** comparable and the files say so.
 python3 harness/api_suite.py --self-test          # prove the graders can fail
 python3 tools/acceptance-probe.py --self-test
 python3 tools/clock-parity.py --self-test
+python3 tools/thermal-guard.py --self-test
 python3 tools/acceptance-probe.py --base http://<head>:8888 --model <name>
 python3 tools/clock-parity.py --nodes <n1>,<n2> --base http://<head>:8888 --model <name>
 python3 harness/api_suite.py --base http://<host>:8888 --model <name>
