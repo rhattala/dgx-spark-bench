@@ -9,8 +9,10 @@ project artifacts, not scratch.
 DESIGN RULE: every task is machine-graded — exact string, parsed number, valid JSON,
 or CODE THAT IS EXECUTED against assertions. No human judgement, so runs compare.
 
-⚠️ Reads the reasoning channel. This model emits reasoning_content separately; a
-grader that only reads `content` scores a thinking model as empty.
+⚠️ Reads the reasoning channel, under BOTH field names. This build returns it as
+`reasoning`; other builds return `reasoning_content`. A grader that reads only
+`content` scores a thinking model as empty, and one that reads only the wrong
+channel name records "no reasoning" forever without ever erroring.
 
 ⚠️ Temperature 0 is NOT deterministic here (speculative decoding + continuous
 batching). Single-trial deltas are noise. Use --repeat for anything you intend to
@@ -75,7 +77,10 @@ def ask(prompt, url, model, max_tokens=3000, temperature=0.0, reasoning=None,
         calls.append({"name": fn.get("name"), "args": args})
     return {"ok": True, "err": None,
             "content": (m.get("content") or "").strip(),
-            "reasoning": (m.get("reasoning_content") or "").strip(),
+            # ⚠️ READ BOTH NAMES. This build emits `reasoning`; other vLLM/SGLang builds
+            # emit `reasoning_content`. Reading one name returns "" forever on the other,
+            # silently — a thinking model then records as having thought nothing.
+            "reasoning": ((m.get("reasoning") or m.get("reasoning_content") or "").strip()),
             "calls": calls, "finish": ch.get("finish_reason"),
             "ctok": d.get("usage", {}).get("completion_tokens", 0),
             "secs": time.time() - t0}

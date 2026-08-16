@@ -60,7 +60,12 @@ def probe(url, model, prompt, timeout):
         return {"error": "%s: %s" % (type(e).__name__, str(e)[:110]), "secs": time.time() - t0}
     el = time.time() - t0
     ch = d["choices"][0]
-    txt = (ch["message"].get("content") or "") + " " + (ch["message"].get("reasoning_content") or "")
+    # ⚠️ THE FIELD NAME IS NOT PORTABLE. This build emits the thinking channel as
+    # `reasoning`; other vLLM/SGLang builds emit `reasoning_content`. Reading only one
+    # name returns an empty string forever on the other, with no error — read BOTH.
+    m = ch["message"]
+    txt = " ".join(x for x in (m.get("content"), m.get("reasoning"),
+                               m.get("reasoning_content")) if x)
     return {"answer": txt.strip()[:120], "secs": el,
             "prompt_tokens": d.get("usage", {}).get("prompt_tokens"),
             "finish": ch.get("finish_reason")}
