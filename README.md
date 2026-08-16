@@ -27,6 +27,57 @@ the distinction changes every sizing calculation.
 | `harness/api_suite.py` | **the server, not the model** — OpenAI-compat contract, streaming, tool calls, error handling, security posture |
 | `harness/soak.py` | sustained-load soak with per-node thermal + clock telemetry |
 | `harness/qwen38-clock-probe.py` | decode / prefill / concurrency probe, endpoint-agnostic |
+| `harness/niah.py` | long-context retrieval — random unguessable needles, cache-defeating |
+| `tools/acceptance-probe.py` | speculative-decoding health by **per-position profile**, not by a bare percentage |
+| `tools/clock-parity.py` | asserts every node shares one clock policy — **must run under load** |
+
+## Operational checks
+
+Two of these are not benchmarks. They are checks that each caught something a reasonable
+person had already concluded was fine, and both are useful to anyone running the same
+class of system rather than this specific one.
+
+### `tools/acceptance-probe.py` — a bare acceptance % is not a health metric
+
+Draft acceptance swings **~20 pp on prompt alone**. Measured on one healthy cluster,
+minutes apart, loader patch verified present: the prose prompt read **25.5%** (would
+scream "loader bug live") and a code prompt read **45.7%** (would fail a ≥55% gate). Both
+false alarms about a system that was fine.
+
+So the probe pins prompt, sampling and token count, warms the engine, and grades the
+**shape** before the number — a healthy k=5 drafter decays monotonically across draft
+positions; one running on badly-loaded weights collapses roughly flat.
+
+```
+acceptance 50.9%  (1437/2825, mean 2.54 accepted per draft)  49.0 tok/s  floor 33%
+per-position: pos0 79%  pos1 62%  pos2 48%  pos3 37%  pos4 28%
+HEALTHY
+```
+
+⚠️ **The floor is not portable.** 33% is ~2σ below a measured mean *on this exact prompt*.
+Change the prompt and the floor is meaningless — which is the entire point of the tool.
+
+⚠️ Parse `/metrics` **by name**. The endpoint emits drafts, draft_tokens and accepted in
+that order, and a positional parse silently mislabels them into a plausible-looking rate.
+`--self-test` carries a negative control for precisely this.
+
+### `tools/clock-parity.py` — asymmetry is worse than either state
+
+We uncapped the GPU clock on both nodes, but a boot-time service re-applied the cap at
+every start, so **live state is not boot state**: whichever node reboots comes back capped
+while the other stays uncapped. Tensor parallelism runs in lockstep, so the whole cluster
+then runs at the slow node's pace, the measured gain evaporates, and nothing reports it.
+
+⚠️ **It must run under load or it lies.** No `nvidia-smi` field reports an `-lgc` lock —
+`Applications Clocks` and `Max Clocks` are both fixed and neither moves when the lock is
+applied or released. At idle, a capped and an uncapped GPU can read the **same** clock.
+The clock *achieved while working* is the only evidence that exists, so the tool drives a
+real generation and samples during it. With no engine to load the GPUs it returns
+**UNVERIFIED (rc=2)** — there is deliberately no idle fallback.
+
+Both tools were verified by **execution, not inspection**: the parity check was proven by
+re-applying a cap to one node on purpose (caught a 539 MHz spread), and both `--self-test`
+suites were re-run against deliberately-broken copies to confirm they fail loudly.
 
 ## Rules every harness here follows
 
@@ -125,6 +176,10 @@ different prompts or clock states are **not** comparable and the files say so.
 
 ```bash
 python3 harness/api_suite.py --self-test          # prove the graders can fail
+python3 tools/acceptance-probe.py --self-test
+python3 tools/clock-parity.py --self-test
+python3 tools/acceptance-probe.py --base http://<head>:8888 --model <name>
+python3 tools/clock-parity.py --nodes <n1>,<n2> --base http://<head>:8888 --model <name>
 python3 harness/api_suite.py --base http://<host>:8888 --model <name>
 python3 harness/dspark-bench.py --reasoning high --repeat 3
 python3 harness/soak.py --concurrency 4 --minutes 10     # refuses without a thermal guard
