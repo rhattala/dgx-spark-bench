@@ -1,0 +1,69 @@
+{
+ "label": "qwen-uncapped",
+ "dir": "/Users/randomllama/spark-deploy/evidence/round2/qwen-seq",
+ "passed": 22,
+ "total": 25,
+ "pages": [
+  {
+   "file": "extra-hard-kanban-board.html",
+   "tier": "kanban-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_card_EXISTS": true,
+    "add_card_works": false,
+    "undo_control": true,
+    "search_filters": true,
+    "localStorage_written": false,
+    "responsive_at_320": false,
+    "no_js_errors": true
+   },
+   "passed": 5,
+   "total": 8
+  },
+  {
+   "file": "hard-sales-dashboard.html",
+   "tier": "sales-dashboard",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "svg_chart_drawn": true,
+    "table_has_rows": true,
+    "sort_changes_order": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "medium-task-board.html",
+   "tier": "task-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_task_works": true,
+    "localStorage_written": true,
+    "survives_reload": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "simple-pricing-table.html",
+   "tier": "pricing-table",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "three_tier_prices": true,
+    "has_cta_buttons": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 5,
+   "total": 5
+  }
+ ]
+}

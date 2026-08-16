@@ -1,0 +1,191 @@
+{
+ "label": "deepseek-uncapped-x3",
+ "dir": "results/2026-08-16/frontend-repeat",
+ "passed": 75,
+ "total": 75,
+ "pages": [
+  {
+   "file": "extra-hard-kanban-board-run1.html",
+   "tier": "kanban-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_card_EXISTS": true,
+    "add_card_works": true,
+    "undo_control": true,
+    "search_filters": true,
+    "localStorage_written": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 8,
+   "total": 8
+  },
+  {
+   "file": "extra-hard-kanban-board-run2.html",
+   "tier": "kanban-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_card_EXISTS": true,
+    "add_card_works": true,
+    "undo_control": true,
+    "search_filters": true,
+    "localStorage_written": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 8,
+   "total": 8
+  },
+  {
+   "file": "extra-hard-kanban-board-run3.html",
+   "tier": "kanban-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_card_EXISTS": true,
+    "add_card_works": true,
+    "undo_control": true,
+    "search_filters": true,
+    "localStorage_written": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 8,
+   "total": 8
+  },
+  {
+   "file": "hard-sales-dashboard-run1.html",
+   "tier": "sales-dashboard",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "svg_chart_drawn": true,
+    "table_has_rows": true,
+    "sort_changes_order": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "hard-sales-dashboard-run2.html",
+   "tier": "sales-dashboard",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "svg_chart_drawn": true,
+    "table_has_rows": true,
+    "sort_changes_order": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "hard-sales-dashboard-run3.html",
+   "tier": "sales-dashboard",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "svg_chart_drawn": true,
+    "table_has_rows": true,
+    "sort_changes_order": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "medium-task-board-run1.html",
+   "tier": "task-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_task_works": true,
+    "localStorage_written": true,
+    "survives_reload": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "medium-task-board-run2.html",
+   "tier": "task-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_task_works": true,
+    "localStorage_written": true,
+    "survives_reload": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "medium-task-board-run3.html",
+   "tier": "task-board",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "add_task_works": true,
+    "localStorage_written": true,
+    "survives_reload": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 6,
+   "total": 6
+  },
+  {
+   "file": "simple-pricing-table-run1.html",
+   "tier": "pricing-table",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "three_tier_prices": true,
+    "has_cta_buttons": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 5,
+   "total": 5
+  },
+  {
+   "file": "simple-pricing-table-run2.html",
+   "tier": "pricing-table",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "three_tier_prices": true,
+    "has_cta_buttons": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 5,
+   "total": 5
+  },
+  {
+   "file": "simple-pricing-table-run3.html",
+   "tier": "pricing-table",
+   "console_errors": [],
+   "checks": {
+    "renders_content": true,
+    "three_tier_prices": true,
+    "has_cta_buttons": true,
+    "responsive_at_320": true,
+    "no_js_errors": true
+   },
+   "passed": 5,
+   "total": 5
+  }
+ ]
+}

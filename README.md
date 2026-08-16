@@ -92,14 +92,25 @@ the entire 12k-token budget in the reasoning channel and return **zero bytes**.
 `chat_template_kwargs.enable_thinking`. The OpenAI-style knob is accepted and silently
 does nothing.
 
-### Machine checks saturate, and then they lie
+### Static checks saturate and then INVERT the answer
 
-Both models scored 17–18/18 on the hardest front-end task. Functional testing in a real
-browser found the higher-scoring page **had no way to add a card at all** — a feature the
-prompt explicitly required, which the lower-scoring page implemented three times over.
+Both models scored 17–18/18 on the hardest front-end task under static checks. Driving the
+same pages in a real browser (`harness/functional_check.py`) reverses the ranking:
 
-**A check suite both candidates max out has stopped measuring.** Presence-in-the-source is
-not function. This is why `results/` records what was verified functionally and what was not.
+| | static checks | functional checks |
+|---|---|---|
+| DeepSeek-V4-Flash | 55/63 | **25/25** (identical across 3 runs) |
+| Qwen3.8-27B | **62/63** | 22/25 |
+
+Qwen's kanban board fails `add_card_works`, `localStorage_written` and `responsive_at_320`
+— and the static suite scored that same page **18/18**, because the strings it looks for
+were all present in the source.
+
+**A check suite both candidates max out has stopped measuring**, and worse, it can rank a
+broken page above a working one with near-zero run-to-run variance. Presence in the source
+is not function. `functional_check.py` carries a `--self-test` that runs it against a
+deliberately broken fixture AND a working one, because a functional suite that passes
+everything is the same trap it was built to escape.
 
 ## Results format
 
