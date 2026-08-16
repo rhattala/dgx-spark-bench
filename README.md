@@ -34,9 +34,9 @@ the distinction changes every sizing calculation.
 
 ## Operational checks
 
-Two of these are not benchmarks. They are checks that each caught something a reasonable
-person had already concluded was fine, and both are useful to anyone running the same
-class of system rather than this specific one.
+Three of these are not benchmarks. They are checks that each caught something a reasonable
+person had already concluded was fine, and each is useful to anyone running the same class
+of system rather than this specific one.
 
 ### `tools/acceptance-probe.py` — a bare acceptance % is not a health metric
 
