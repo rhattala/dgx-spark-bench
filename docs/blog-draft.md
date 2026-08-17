@@ -151,6 +151,6 @@ The numbers are evidence about my cluster. The traps are general.
 Harnesses, raw JSON, the rendered pages, and a written-up list of the limitations I chose to
 live with rather than fix:
 
-**[github.com/USERNAME/spark-bench](https://github.com/USERNAME/spark-bench)**
+**[github.com/rhattala/dgx-spark-bench](https://github.com/rhattala/dgx-spark-bench)**
 
 If you take one thing from it, take the self-tests, not the leaderboard.

@@ -1,4 +1,4 @@
-# spark-bench
+# dgx-spark-bench
 
 Benchmarks and operational harnesses for a **2× NVIDIA DGX Spark (GB10)** cluster running
 local LLM inference. Built while deploying and debugging a real system, not as a synthetic
