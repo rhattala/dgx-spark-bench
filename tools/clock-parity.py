@@ -87,8 +87,14 @@ def engine_up(base):
         return False
 
 
-def generate(base, model, tokens):
-    """A short real generation — the load that makes achieved clocks meaningful."""
+def generate(base, model, tokens, out):
+    """A short real generation — the load that makes achieved clocks meaningful.
+
+    ⚠️ REPORTS WHETHER IT ACTUALLY RAN. This used to end in `except Exception: pass`, so a
+    404 from a wrong model name returned instantly, created NO load, and the tool still
+    printed "achieved N MHz under load ... PARITY OK". A confident verdict with no evidence
+    its own precondition held — which is the exact thing this tool exists to catch.
+    """
     body = {"model": model, "max_tokens": tokens, "temperature": 0.0, "stream": False,
             "messages": [{"role": "user",
                           "content": "Write a detailed paragraph about compiler optimization."}]}
@@ -96,9 +102,10 @@ def generate(base, model, tokens):
                                  data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
     try:
-        urllib.request.urlopen(req, timeout=180).read()
-    except Exception:
-        pass
+        d = json.load(urllib.request.urlopen(req, timeout=180))
+        out["tokens"] = d.get("usage", {}).get("completion_tokens", 0) or 0
+    except Exception as e:
+        out["error"] = "%s: %s" % (type(e).__name__, str(e)[:120])
 
 
 def self_test():
@@ -160,7 +167,8 @@ def main():
               "at idle. This is why there is no idle fallback.)" % base)
         return 2
 
-    t = threading.Thread(target=generate, args=(base, a.model, a.tokens), daemon=True)
+    load = {}
+    t = threading.Thread(target=generate, args=(base, a.model, a.tokens, load), daemon=True)
     t.start()
     time.sleep(3)
 
@@ -174,6 +182,16 @@ def main():
                 peaks[n] = (sm, temp)
         time.sleep(2)
     t.join(timeout=180)
+
+    # The load is this tool's PRECONDITION, not a side effect. If it did not run, every
+    # clock reading below is an idle reading, and a capped and an uncapped GPU are
+    # indistinguishable at idle. Say UNVERIFIED; never print "under load" on no load.
+    if load.get("tokens", 0) <= 0:
+        print("UNVERIFIED: the load generation did not run (%s), so no clock was sampled "
+              "under load.\n  A capped and an uncapped GPU read the same at idle, so any "
+              "verdict here would be meaningless.\n  Check --model matches a served model "
+              "name." % (load.get("error") or "no completion tokens returned"))
+        return 2
 
     rc, lines = verdict(peaks, nodes, a.tolerance, a.uncapped_above)
     for ln in lines:

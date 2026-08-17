@@ -48,6 +48,33 @@ def build(prompt_tokens, depth, needle, rng):
     return head + doc + tail
 
 
+NEEDLE_PREFIX = "SPARK-NIAH-"
+
+
+def near_miss(needle, ans):
+    """(similarity, is_near_miss). A near-miss is a TRANSCRIPTION slip on a needle that was
+    FOUND — not a retrieval failure. Grading those as failures understates long-context
+    capability and points debugging at the wrong thing.
+
+    ⚠️ ANCHOR ON THE PREFIX INSIDE THE ANSWER. This used to compare against `ans[:len+6]`,
+    anchored at position 0, so it only fired on a bare answer: the same one-character error
+    behind a preamble ("The code is SPARK-NIAH-MKCBSUN") scored 0.59 and graded a flat FAIL.
+    ⚠️ AND IT MUST BE ABLE TO FAIL: a DIFFERENT needle must not pass. The 0.85 threshold on
+    an 8-char random suffix needs ~6 of 8 characters right, which luck does not supply.
+    """
+    if not ans:
+        return 0.0, False
+    i = ans.find(NEEDLE_PREFIX)
+    if i < 0:
+        # No recognisable needle token at all — compare against the head, so a reply that
+        # simply does not contain one scores low rather than erroring.
+        cand = ans[:len(needle) + 6]
+    else:
+        cand = ans[i:i + len(needle) + 6]
+    sim = difflib.SequenceMatcher(None, needle, cand).ratio()
+    return sim, (needle not in ans) and sim >= 0.85
+
+
 def probe(url, model, prompt, timeout):
     body = {"model": model, "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 64, "temperature": 0.0, "stream": False}
@@ -100,6 +127,25 @@ def main():
             good = got == want
             ok &= good
             print("  %-34s got=%-5s want=%-5s %s" % (label, got, want, "ok" if good else "*** BROKEN ***"))
+        print("\n  near_miss() — a transcription slip must PASS, a wrong needle must FAIL")
+        nm_cases = [
+            ("one char dropped, bare",        "SPARK-NIAH-MKCBSUN",                    True),
+            ("one char dropped, with preamble",
+             "The authorisation code is SPARK-NIAH-MKCBSUN.",                          True),
+            ("one char substituted",          "SPARK-NIA0-MKCBSUN6",                   True),
+            ("A DIFFERENT NEEDLE must fail",  "SPARK-NIAH-ZZZZZZZZ",                   False),
+            ("refusal must fail",             "I could not find the code",             False),
+            ("empty answer must fail",        "",                                      False),
+            ("prefix only, no suffix",        "SPARK-NIAH-",                           False),
+        ]
+        fixed = "SPARK-NIAH-MKCBSUN6"
+        for label, reply, want in nm_cases:
+            _, got = near_miss(fixed, reply)
+            good = got == want
+            ok &= good
+            print("    %-34s got=%-5s want=%-5s %s" % (label, got, want,
+                                                       "ok" if good else "*** BROKEN ***"))
+
         # and the builder must actually place the needle
         p = build(2000, 0.5, n, rng)
         placed = n in p
@@ -135,8 +181,7 @@ def main():
             # The model FOUND the needle every time. Grading those as retrieval failures
             # would understate long-context capability and point debugging at the wrong
             # thing entirely.
-            sim = difflib.SequenceMatcher(None, needle, ans[:len(needle) + 6]).ratio()
-            near = (not ok) and sim >= 0.85
+            sim, near = near_miss(needle, ans)
             rows.append({"target": size, "depth": depth, "pass": ok, "near_miss": near,
                          "similarity": round(sim, 3),
                          "prompt_tokens": r["prompt_tokens"], "secs": round(r["secs"], 1),

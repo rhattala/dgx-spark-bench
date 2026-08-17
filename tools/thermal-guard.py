@@ -19,17 +19,29 @@ lease, or a self-limit; a reapply loop alone is not enough. Four defences here:
   3. HEARTBEAT — state written every cycle. `--status` reports **UNVERIFIED (rc=2)**, never
      "ok", when the heartbeat is stale. A guard that is silently dead is worse than no
      guard, because you believe you are protected.
-  4. RELEASES ONLY WHAT IT APPLIED. If the operator capped the node deliberately, exiting
-     must not silently remove their protection.
+  4. RELEASES ONLY THE CAP IT APPLIED — with a limit it cannot escape. ⚠️ It CANNOT tell
+     whether a cap was already there: no `nvidia-smi` field reports an `-lgc` lock (that is
+     why the parity checker samples clocks under load instead). So if you have capped a node
+     deliberately and this guard then trips, its `set_cap(True)` is a hardware no-op, it
+     records the cap as its own, and on exit it releases YOURS. **Do not run this guard on a
+     node you have deliberately capped.** The honest claim is "it releases the cap it
+     applied, and cannot distinguish that from someone else's."
 
 ⚠️ AN UNREADABLE SENSOR IS NOT A COOL GPU. If `nvidia-smi` fails, the cycle records
 `sensor: UNREADABLE` and takes no action — it never writes a reassuring temperature.
 
 ⚠️ HONEST LIMIT — STALENESS DETECTION HAS A BLIND WINDOW. `--status` decides liveness from
-heartbeat age, so for up to `INTERVAL * 6` seconds after a SIGKILL it still reports "alive".
+heartbeat age, so for up to `interval * 6` seconds after a SIGKILL it still reports "alive".
 Measured: with `--interval 2`, a hard-killed guard read OK for ~12 s before flipping to
 UNVERIFIED. At the 5 s default that window is ~30 s. If you need faster detection, shorten
 the interval; do not read a single OK as proof of protection during an incident.
+
+⚠️ The interval used is the one the RUNNING GUARD recorded in its heartbeat, not whatever
+`--interval` you happen to pass to `--status`. Those diverged before: a guard running at 60 s
+was called dead by a status check defaulting to 5 s (false alarm), and — worse — a guard
+killed 25 s ago after running at 2 s read "alive" to a status check defaulting to 5 s (false
+OK, silently extending the very window disclosed above). A heartbeat written by an older
+build carries no interval; `--status` then falls back to the passed value and SAYS SO.
 
 Exit codes (--status):  0 alive · 1 stopped cleanly · 2 UNVERIFIED (stale/missing/unreadable)
 """
@@ -68,19 +80,27 @@ def decide(temp, capped_by_us, cool_streak, trip, clear, clear_cycles):
 
 
 def status_from(d, now, interval):
-    """Pure. -> (exit_code, message). `d` is the parsed heartbeat, or None if absent."""
+    """Pure. -> (exit_code, message). `d` is the parsed heartbeat, or None if absent.
+
+    The guard's OWN interval governs. See the module docstring: judging by the caller's
+    --interval produced both a false alarm and a false OK on a dead guard.
+    """
     if d is None:
         return 2, "UNVERIFIED: no heartbeat file — the guard has never run on this node"
+    own = d.get("interval")
+    src = "guard" if own else "caller (heartbeat records none)"
+    interval = own or interval
     age = now - d.get("ts", 0)
     if not d.get("running"):
         return 1, ("STOPPED: guard exited cleanly %.0fs ago (capped_by_us=%s)"
                    % (age, d.get("capped_by_us")))
     if age > interval * STALE_FACTOR:
-        return 2, ("UNVERIFIED: heartbeat is %.0fs old (interval %.0fs) — the guard is NOT "
-                   "alive. You are not protected." % (age, interval))
+        return 2, ("UNVERIFIED: heartbeat is %.0fs old (interval %.0fs, from %s) — the guard "
+                   "is NOT alive. You are not protected." % (age, interval, src))
     t = d.get("temp")
-    return 0, ("OK: guard alive, last %.0fs ago | temp %s | capped_by_us=%s"
-               % (age, ("%.0fC" % t) if t is not None else "UNREADABLE",
+    return 0, ("OK: guard alive, last %.0fs ago (interval %.0fs from %s) | temp %s | "
+               "capped_by_us=%s"
+               % (age, interval, src, ("%.0fC" % t) if t is not None else "UNREADABLE",
                   d.get("capped_by_us")))
 
 
@@ -153,6 +173,13 @@ def self_test():
         ("STALE heartbeat (dead)",    {"ts": now - 400, "running": True, "temp": 55}, 2),
         ("clean exit",                {"ts": now - 9, "running": False},              1),
         ("alive, sensor unreadable",  {"ts": now - 2, "running": True, "temp": None}, 0),
+        # --- added after review: the caller's --interval must NOT govern ---
+        ("slow guard (60s), 45s old -> alive, not a false alarm",
+         {"ts": now - 45, "running": True, "temp": 55, "interval": 60}, 0),
+        ("fast guard (2s) DEAD 25s -> must NOT read OK",
+         {"ts": now - 25, "running": True, "temp": 55, "interval": 2}, 2),
+        ("legacy heartbeat with no interval falls back to caller's",
+         {"ts": now - 400, "running": True, "temp": 55}, 2),
     ]
     for label, d, want in scases:
         rc, msg = status_from(d, now, 5.0)
@@ -219,7 +246,8 @@ def main():
         if _state["capped_by_us"]:
             set_cap(False)
             print("[guard] exiting — released the cap we applied", flush=True)
-        write_state(heartbeat, running=False, capped_by_us=_state["capped_by_us"])
+        write_state(heartbeat, running=False, capped_by_us=_state["capped_by_us"],
+                    interval=a.interval)
 
     atexit.register(release_on_exit)
     for s in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
@@ -251,7 +279,7 @@ def main():
                 print("[guard] %.0fC < %.0fC for %d cycles — cap released"
                       % (temp, clear, a.clear_cycles), flush=True)
 
-        write_state(heartbeat, running=True, temp=temp, sm=sm,
+        write_state(heartbeat, running=True, temp=temp, sm=sm, interval=a.interval,
                     capped_by_us=_state["capped_by_us"],
                     sensor="ok" if temp is not None else "UNREADABLE")
         time.sleep(a.interval)

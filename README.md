@@ -55,8 +55,19 @@ per-position: pos0 79%  pos1 62%  pos2 48%  pos3 37%  pos4 28%
 HEALTHY
 ```
 
-⚠️ **The floor is not portable.** 33% is ~2σ below a measured mean *on this exact prompt*.
-Change the prompt and the floor is meaningless — which is the entire point of the tool.
+⚠️ **The floor is not portable.** 33% sits below a measured mean of 42.8% *on this exact
+prompt* (n=3: 43.0/40.2/45.3, sd 2.6) — that is ~3.8σ, not the "~2σ" an earlier version of
+this file claimed. Conservative in the safe direction, but the σ figure was simply wrong.
+Change the prompt and the floor is meaningless, which is the entire point of the tool. The
+baseline also predates the 0731 checkpoint, which reads ~50.9%: re-baseline before treating
+33% as tuned rather than merely loose.
+
+⚠️ **Shape grading needs BOTH rules.** A "no big rises" test alone cannot see a flat
+profile — and flat is the fault it exists to catch. `[56,55,56,55,56]` and even
+`[56,61,66,71,76]` passed it. The self-test missed this because its flat case used a weak
+`pos0`, which a *different* arm rejects: the case was over-determined, so it passed while
+the arm under test did nothing. There is now a minimum decay-per-position requirement and
+cases that must fail without it.
 
 ⚠️ Parse `/metrics` **by name**. The endpoint emits drafts, draft_tokens and accepted in
 that order, and a positional parse silently mislabels them into a plausible-looking rate.
@@ -87,7 +98,11 @@ admission gate every 5 s, correctly and tirelessly, **on behalf of a test unit t
 have been dead**. The loop wasn't buggy — it had no concept of "I should not be running."
 So this one carries four defences: an flock (one owner, ever), a `--max-runtime` self-limit,
 a heartbeat whose `--status` says **UNVERIFIED (rc=2)** rather than "ok" when stale, and
-release-only-what-it-applied so exiting can't strip an operator's deliberate cap.
+release-only-what-it-applied. ⚠️ That last defence has a limit worth stating: **it
+cannot detect a cap that was already there** — no `nvidia-smi` field reports an `-lgc` lock,
+which is why the parity tool samples clocks under load. Cap a node deliberately, let the
+guard trip, and it will record that cap as its own and release *yours* on exit. Don't run it
+on a node you have capped by hand.
 
 Proven by execution on a live node in `--dry-run` (no clocks touched):
 
@@ -101,7 +116,10 @@ Proven by execution on a live node in `--dry-run` (no clocks touched):
 
 ⚠️ **That last test also exposed the honest limit:** staleness detection has a blind
 window of `interval × 6`. A hard-killed guard read "OK" for ~12 s at `--interval 2`, ~30 s
-at the default. One OK is not proof of protection during an incident.
+at the default. One OK is not proof of protection during an incident. And the interval used
+is the one the **running guard** recorded — judging by the caller's `--interval` produced
+both a false alarm (60 s guard called dead by a 5 s check) and, worse, a **false OK on a
+dead guard**, which silently extended that window.
 
 All three tools were verified by **execution, not inspection**: the parity check was proven by
 re-applying a cap to one node on purpose (caught a 539 MHz spread), and both `--self-test`

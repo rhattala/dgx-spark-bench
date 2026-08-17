@@ -51,8 +51,17 @@ def reconcile_ledger(entries, opening_balance, *, tolerance=Decimal("0.01")):
 """
 
 # How far a position may RISE above its predecessor before the profile stops counting as
-# decaying. Small positive slack absorbs sampling noise without admitting a flat profile.
+# decaying. Small positive slack absorbs sampling noise.
 MONOTONIC_SLACK_PP = 6
+# ⚠️ THE SLACK RULE ALONE CANNOT SEE A FLAT PROFILE — and flat is the fault it exists to
+# catch. With 6pp of slack, [56,55,56,55,56] and even [56,61,66,71,76] both satisfy
+# "every step is within 6pp of decaying", so both graded HEALTHY. The self-test missed it
+# because its FLAT case used pos0=30, which the POS0 arm rejects independently: the case
+# was over-determined, so it passed while the arm under test did nothing.
+# So require REAL decay too. Measured healthy (9 samples): pos0 74-81 -> pos4 15-30, i.e.
+# 11-13pp per step. A broken drafter is ~0. 8pp/step splits them with margin, and scaling
+# per STEP keeps it valid for k != 5.
+MIN_DECAY_PER_STEP_PP = 8
 # A healthy drafter's first position is strong. Below this, the drafter itself is weak —
 # the signature of a loader/weight-mapping fault rather than a hard prompt.
 POS0_MIN_PCT = 55
@@ -79,17 +88,30 @@ def parse_metrics(raw):
 def grade(rate, prof, floor):
     """Pure verdict. (exit_code, [lines]). Shape is judged BEFORE the headline number."""
     lines = []
-    if len(prof) >= 5 and prof[0] < POS0_MIN_PCT:
+    if not prof:
+        lines.append("UNVERIFIED: no per-position data — cannot judge profile shape, and "
+                     "the headline percentage alone is not a health signal.")
+        return 2, lines
+    if prof[0] < POS0_MIN_PCT:
         lines.append("UNHEALTHY: first draft position only %.0f%% — the drafter itself is "
                      "weak. That is a loader/weight-mapping signature, not a hard prompt."
                      % prof[0])
         return 2, lines
     monotonic = all(prof[i] >= prof[i + 1] - MONOTONIC_SLACK_PP
-                    for i in range(len(prof) - 1)) if prof else False
+                    for i in range(len(prof) - 1))
     if not monotonic:
-        lines.append("UNHEALTHY: per-position profile is not decaying. A healthy drafter "
-                     "loses ground at every successive position; a broken one is flat.")
+        lines.append("UNHEALTHY: per-position profile rises. A healthy drafter loses ground "
+                     "at every successive position.")
         return 2, lines
+    steps = len(prof) - 1
+    if steps:
+        per_step = (prof[0] - prof[-1]) / steps
+        if per_step < MIN_DECAY_PER_STEP_PP:
+            lines.append("UNHEALTHY: profile is FLAT — only %.1f pp of decay per position "
+                         "(healthy is 11-13). pos0 %.0f%% -> pos%d %.0f%%. A drafter running "
+                         "on badly-loaded weights collapses flat instead of decaying."
+                         % (per_step, prof[0], steps, prof[-1]))
+            return 2, lines
     if rate < floor:
         lines.append("BELOW FLOOR: %.1f%% < %.0f%%. Profile shape is fine, so suspect load "
                      "or thermal throttling before suspecting the loader." % (rate, floor))
@@ -136,6 +158,14 @@ def self_test():
         ("INVERTED profile",              40.0, [20, 40, 60, 70, 80], 2),
         ("strong pos0 but rising after",  45.0, [70, 80, 60, 40, 20], 2),
         ("noisy but still decaying",      45.0, [76, 58, 60, 30, 18], 0),
+        # --- cases added after review found the decay arm was near-vacuous ---
+        ("FLAT at 56 (was HEALTHY)",      45.0, [56, 55, 56, 55, 56], 2),
+        ("FLAT at 60 (was HEALTHY)",      45.0, [60, 60, 60, 60, 60], 2),
+        ("RISING slowly (was HEALTHY)",   45.0, [56, 61, 66, 71, 76], 2),
+        ("4-position flat-low",           45.0, [58, 57, 58, 57],     2),
+        ("k=2 healthy decay",             45.0, [79, 62],             0),
+        ("k=2 flat",                      45.0, [79, 76],             2),
+        ("no per-position data at all",   45.0, [],                   2),
     ]
     for label, rate, prof, want in cases:
         got, _ = grade(rate, prof, 33.0)
@@ -176,7 +206,11 @@ def main():
     ap.add_argument("--model", default=os.environ.get("PROBE_MODEL", "deepseek-v4-flash-dspark"))
     ap.add_argument("--n", type=int, default=int(os.environ.get("PROBE_N", "5")))
     ap.add_argument("--max-tokens", type=int, default=int(os.environ.get("PROBE_MAX_TOKENS", "400")))
-    # Floor set ~2 sigma below a measured production mean of 42.8% on this pinned prompt.
+    # Floor 33% against a measured production mean of 42.8% on this pinned prompt
+    # (n=3: 43.0/40.2/45.3, sd 2.6) — that is ~3.8 sigma below, NOT the "~2 sigma" this
+    # comment used to claim. Deliberately conservative, but the sigma figure was wrong.
+    # ⚠️ The baseline was taken on the PREVIEW checkpoint; 0731 reads ~50.9%, so this floor
+    # is loose for a reason nobody has measured. Re-baseline before trusting it as tuned.
     # It is NOT portable to another prompt — that is the whole point of the tool.
     ap.add_argument("--floor", type=float, default=float(os.environ.get("PROBE_FLOOR", "33")))
     ap.add_argument("--temperature", type=float, default=1.0)
