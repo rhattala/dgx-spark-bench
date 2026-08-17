@@ -5,6 +5,18 @@ local LLM inference. Built while deploying and debugging a real system, not as a
 exercise — most of these harnesses exist because something silently gave a wrong answer
 and the harness is what caught it.
 
+> ### Read this before quoting any number here
+>
+> **This is a case study on one machine, not a model ranking.** Every measurement comes
+> from a single 2-node cluster, on one day, with n=3–8 depending on the test. The two
+> stacks compared cannot even run at the same time — they contend for the same hardware —
+> so every cross-stack comparison is sequential and hours apart.
+>
+> If you take one thing from this repo, take the **method**, not the leaderboard: two
+> automated suites here reach *opposite* conclusions about the same twelve pages, and the
+> more confident one is wrong. The numbers are evidence about this cluster. The traps are
+> general.
+
 ## Hardware
 
 | | |
@@ -50,8 +62,8 @@ So the probe pins prompt, sampling and token count, warms the engine, and grades
 positions; one running on badly-loaded weights collapses roughly flat.
 
 ```
-acceptance 50.9%  (1437/2825, mean 2.54 accepted per draft)  49.0 tok/s  floor 33%
-per-position: pos0 79%  pos1 62%  pos2 48%  pos3 37%  pos4 28%
+acceptance 45.2%  (1391/3075, mean 2.26 accepted per draft)  45.2 tok/s  floor 38%
+per-position: pos0 76%  pos1 56%  pos2 42%  pos3 30%  pos4 22%
 HEALTHY
 ```
 
@@ -67,9 +79,11 @@ an ordinary busy afternoon. 38 sits ~5sd below the mean, below the lowest readin
 recorded on *either* checkpoint, and still halves the old gap. Tighten it only with a
 multi-day baseline. Change the prompt and it means nothing at all.
 
-⚠️ **A self-test must prove each ARM, not just each case.** This defect was committed
-twice. First the decay rule was unproven, because the flat test case also had a weak
-`pos0` that a *different* arm rejected. Fixing that made the **pos0 arm** unproven — with
+⚠️ **A self-test must prove each ARM, not just each case.** A "no big rises" rule alone
+cannot see a flat profile — `[56,55,56,55,56]` and even a *rising* `[56,61,66,71,76]` both
+passed it — so a minimum decay-per-position rule was added. But this defect was then
+committed twice. First the decay rule was unproven, because the flat test case also had a
+weak `pos0` that a *different* arm rejected. Fixing that made the **pos0 arm** unproven — with
 the stronger decay rule in place, deleting the pos0 comparison entirely left the whole
 suite green. A case two arms can each reject proves neither, and adding an arm can silently
 orphan an existing one. So coverage is now **measured, not asserted**: the self-test
@@ -81,13 +95,6 @@ falls as k grows and an extrapolated healthy k=10 profile grades FLAT. Any other
 UNVERIFIED rather than confidently wrong. The decay test also compares **endpoints**: the
 middle of the profile is unconstrained, so `[79,40,39,38,37]` passes despite pos1 sitting
 far outside every healthy sample.
-
-⚠️ **Shape grading needs BOTH rules.** A "no big rises" test alone cannot see a flat
-profile — and flat is the fault it exists to catch. `[56,55,56,55,56]` and even
-`[56,61,66,71,76]` passed it. The self-test missed this because its flat case used a weak
-`pos0`, which a *different* arm rejects: the case was over-determined, so it passed while
-the arm under test did nothing. There is now a minimum decay-per-position requirement and
-cases that must fail without it.
 
 ⚠️ Parse `/metrics` **by name**. The endpoint emits drafts, draft_tokens and accepted in
 that order, and a positional parse silently mislabels them into a plausible-looking rate.
@@ -220,6 +227,30 @@ same pages in a real browser (`harness/functional_check.py`) reverses the rankin
 |---|---|---|
 | DeepSeek-V4-Flash | 54.3/63 | **75/75 (100%)** |
 | Qwen3.8-27B | **61.3/63** | 66/75 (88%) |
+
+### The finding, in two screenshots
+
+Same prompt, same day, both asked for a kanban board with add / edit / delete / drag / filter
+/ undo. Both scored **18/18 on static checks, in all three runs.**
+
+**DeepSeek — three columns, and an "Add card…" input with a + button in every one:**
+
+![DeepSeek kanban](docs/img/kanban-deepseek.png)
+
+**Qwen — arguably the nicer board. Drag handles, status pills, card IDs, filter, undo,
+dark-mode toggle, keyboard legend. And no way to add a card. Anywhere:**
+
+![Qwen kanban](docs/img/kanban-qwen.png)
+
+That is the whole argument for functional testing. The prettier page is the broken one, and
+the static suite ranked it *higher* precisely because it contained more of the strings the
+suite greps for. Presence in the source is not function.
+
+⚠️ **A detail that matters for honesty:** this is Qwen's run 2. Run 1 threw an uncaught
+`Unexpected token 'null'` and rendered nothing at all
+([screenshot](docs/img/kanban-qwen-run1-jserror.png)) — using *that* as the comparison would
+imply the board is always blank, which is false. The missing add-card control is present in
+**3 of 3** runs; the total render failure was 1 of 3.
 
 **Static says Qwen. Functional says DeepSeek.** And the failure is reproducible: Qwen's
 kanban board failed `add_card_EXISTS` and `add_card_works` on **all three runs**, while
