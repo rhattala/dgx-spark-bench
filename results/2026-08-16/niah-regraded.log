@@ -1,0 +1,22 @@
+=== NIAH: 4 sizes x 3 depths = 12 probes ===
+  needle is RANDOM per probe (unguessable); each prompt carries a unique session id
+  target    depth  actual    secs      result
+  8000      0.05   4827      2.7       PASS
+  8000      0.50   4828      2.7       PASS
+  8000      0.95   4828      2.8       PASS
+  32000     0.05   19215     10.1      PASS
+  32000     0.50   19213     9.9       PASS
+  32000     0.95   19212     9.9       PASS
+  124000    0.05   74234     39.5      PASS
+  124000    0.50   74231     39.7      NEAR-MISS  got='SPARK-NIAH-5DU9AO' (94% match)
+  124000    0.95   74235     39.5      PASS
+  248000    0.05   148432    83.6      PASS
+  248000    0.50   148431    83.4      PASS
+  248000    0.95   148435    83.6      PASS
+
+============================================================
+  EXACT MATCH   11/12
+  RETRIEVAL     12/12   (exact + near-miss: the needle was FOUND)
+  -> 1 near-miss(es): single-character transcription errors, not retrieval
+  deepest passing context: 148435 prompt tokens
+  saved -> results/2026-08-16/niah-deepseek-regraded.json

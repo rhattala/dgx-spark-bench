@@ -1,0 +1,141 @@
+{
+ "label": "deepseek-0731-regraded",
+ "model": "deepseek-v4-flash-dspark",
+ "passed": 11,
+ "graded": 12,
+ "unverified": 0,
+ "probes": [
+  {
+   "target": 8000,
+   "depth": 0.05,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 4827,
+   "secs": 2.7,
+   "answer": "SPARK-NIAH-1VUCV5GP",
+   "needle": "SPARK-NIAH-1VUCV5GP"
+  },
+  {
+   "target": 8000,
+   "depth": 0.5,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 4828,
+   "secs": 2.7,
+   "answer": "SPARK-NIAH-H5S1B28L",
+   "needle": "SPARK-NIAH-H5S1B28L"
+  },
+  {
+   "target": 8000,
+   "depth": 0.95,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 4828,
+   "secs": 2.8,
+   "answer": "SPARK-NIAH-HPTQUSST",
+   "needle": "SPARK-NIAH-HPTQUSST"
+  },
+  {
+   "target": 32000,
+   "depth": 0.05,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 19215,
+   "secs": 10.1,
+   "answer": "SPARK-NIAH-POEANP2G",
+   "needle": "SPARK-NIAH-POEANP2G"
+  },
+  {
+   "target": 32000,
+   "depth": 0.5,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 19213,
+   "secs": 9.9,
+   "answer": "SPARK-NIAH-O8YPB7TI",
+   "needle": "SPARK-NIAH-O8YPB7TI"
+  },
+  {
+   "target": 32000,
+   "depth": 0.95,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 19212,
+   "secs": 9.9,
+   "answer": "SPARK-NIAH-90MDU8HK",
+   "needle": "SPARK-NIAH-90MDU8HK"
+  },
+  {
+   "target": 124000,
+   "depth": 0.05,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 74234,
+   "secs": 39.5,
+   "answer": "SPARK-NIAH-IU486EZ0",
+   "needle": "SPARK-NIAH-IU486EZ0"
+  },
+  {
+   "target": 124000,
+   "depth": 0.5,
+   "pass": false,
+   "near_miss": true,
+   "similarity": 0.944,
+   "prompt_tokens": 74231,
+   "secs": 39.7,
+   "answer": "SPARK-NIAH-5DU9AO",
+   "needle": "SPARK-NIAH-5DU9AO55"
+  },
+  {
+   "target": 124000,
+   "depth": 0.95,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 74235,
+   "secs": 39.5,
+   "answer": "SPARK-NIAH-SC9G9I2C",
+   "needle": "SPARK-NIAH-SC9G9I2C"
+  },
+  {
+   "target": 248000,
+   "depth": 0.05,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 148432,
+   "secs": 83.6,
+   "answer": "SPARK-NIAH-JKVG2FM2",
+   "needle": "SPARK-NIAH-JKVG2FM2"
+  },
+  {
+   "target": 248000,
+   "depth": 0.5,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 148431,
+   "secs": 83.4,
+   "answer": "SPARK-NIAH-P2Z2T441",
+   "needle": "SPARK-NIAH-P2Z2T441"
+  },
+  {
+   "target": 248000,
+   "depth": 0.95,
+   "pass": true,
+   "near_miss": false,
+   "similarity": 1.0,
+   "prompt_tokens": 148435,
+   "secs": 83.6,
+   "answer": "SPARK-NIAH-CUGPZRHG",
+   "needle": "SPARK-NIAH-CUGPZRHG"
+  }
+ ]
+}
