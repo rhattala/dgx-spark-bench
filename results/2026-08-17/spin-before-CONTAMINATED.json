@@ -1,0 +1,53 @@
+{
+ "label": "before-spinfix",
+ "model": "deepseek-v4-flash-dspark",
+ "trials": 5,
+ "decode_tokens": 400,
+ "decode_tok_s": {
+  "values": [
+   47.05,
+   10.36,
+   35.15,
+   43.14,
+   47.44
+  ],
+  "mean": 36.63,
+  "sd": 15.49
+ },
+ "prefill_tok_s": {
+  "values": [
+   1797.8,
+   13233.2,
+   15064.3
+  ],
+  "mean": 10031.8
+ },
+ "under_load": {
+  "spark-1": {
+   "cpu_pct": 486.3,
+   "zone_max": 85,
+   "clock_mhz": 2489.0,
+   "gpu_temp_c": 69.0
+  },
+  "spark-2": {
+   "cpu_pct": 284.9,
+   "zone_max": 83,
+   "clock_mhz": 2528.0,
+   "gpu_temp_c": 69.0
+  }
+ },
+ "idle": {
+  "spark-1": {
+   "cpu_pct": 3.5,
+   "zone_max": 56
+  },
+  "spark-2": {
+   "cpu_pct": 3.5,
+   "zone_max": 56
+  }
+ },
+ "clock_state": {
+  "spark-1": 2489.0,
+  "spark-2": 2528.0
+ }
+}

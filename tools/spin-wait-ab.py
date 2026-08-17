@@ -75,6 +75,39 @@ def clocks(node):
         return None, None
 
 
+def inflight(base):
+    """Requests the engine is already serving. Foreign traffic makes a timing trial
+    meaningless, and this deployment has watchdog crons firing real generations every few
+    minutes — one landed mid-trial and produced a 10.4 tok/s reading among 47s."""
+    try:
+        raw = urllib.request.urlopen(base + "/metrics", timeout=8).read().decode()
+        for line in raw.splitlines():
+            if line.startswith("vllm:num_requests_running"):
+                return float(line.rsplit(" ", 1)[1])
+    except Exception:
+        pass
+    return None
+
+
+def clean_trial(base, model, prompt, max_tokens, tries=4):
+    """Run a timing trial, DISCARDING any that overlapped foreign traffic.
+
+    Silencing the watchdogs would also work and the tooling exists for it — but quieting
+    monitoring to make a benchmark look tidy is the wrong trade, especially on a night that
+    has already had a thermal event. Detect contention instead and refuse the sample.
+    """
+    for _ in range(tries):
+        if (inflight(base) or 0) > 0:
+            time.sleep(8)
+            continue
+        r = gen(base, model, prompt, max_tokens)
+        if (inflight(base) or 0) > 0:      # someone joined while we ran
+            time.sleep(8)
+            continue
+        return r
+    return None
+
+
 def gen(base, model, prompt, max_tokens, temperature=0.0):
     body = {"model": model, "messages": [{"role": "user", "content": prompt}],
             "max_tokens": max_tokens, "temperature": temperature, "stream": False}
@@ -116,25 +149,41 @@ def main():
         gen(base, a.model, DECODE_PROMPT, 200)
 
     # --- decode, single stream ---
-    dec = []
+    dec, skipped = [], 0
     for i in range(a.trials):
-        r = gen(base, a.model, DECODE_PROMPT, a.decode_tokens)
+        r = clean_trial(base, a.model, DECODE_PROMPT, a.decode_tokens)
+        if r is None:
+            skipped += 1
+            print("  decode trial %d: SKIPPED — engine busy with other traffic" % (i + 1))
+            continue
         tps = r["completion_tokens"] / r["secs"] if r["secs"] else 0
         dec.append(tps)
         print("  decode trial %d: %5.1f tok/s (%d tokens)" % (i + 1, tps, r["completion_tokens"]))
+    res["decode_skipped"] = skipped
     res["decode_tok_s"] = {"values": [round(x, 2) for x in dec],
-                           "mean": round(st.mean(dec), 2),
+                           "mean": round(st.mean(dec), 2) if dec else None,
+                           "median": round(st.median(dec), 2) if dec else None,
                            "sd": round(st.stdev(dec), 2) if len(dec) > 1 else 0.0}
+    if len(dec) > 1 and st.stdev(dec) > 0.10 * st.mean(dec):
+        print("  ⚠️  sd is >10%% of the mean — this baseline cannot resolve a small effect.")
 
     # --- prefill ---
     big = PREFILL_FILLER * (a.prefill_chars // len(PREFILL_FILLER))
     pre = []
-    for i in range(3):
-        r = gen(base, a.model, big + "\n\nSummarise the above in one sentence.", 24)
+    print("  (prefill trial 1 is discarded: first touch of a new prompt is uncached)")
+    for i in range(4):
+        r = clean_trial(base, a.model, big + "\n\nSummarise the above in one sentence.", 24)
+        if r is None:
+            print("  prefill trial %d: SKIPPED — busy" % (i + 1)); continue
+        if i == 0:
+            print("  prefill trial 1: %6.0f prompt tok/s  [discarded, cold]"
+                  % (r["prompt_tokens"] / r["secs"] if r["secs"] else 0)); continue
         pts = r["prompt_tokens"] / r["secs"] if r["secs"] else 0
         pre.append(pts)
         print("  prefill trial %d: %6.0f prompt tok/s (%d prompt tokens)" % (i + 1, pts, r["prompt_tokens"]))
-    res["prefill_tok_s"] = {"values": [round(x, 1) for x in pre], "mean": round(st.mean(pre), 1)}
+    res["prefill_tok_s"] = {"values": [round(x, 1) for x in pre],
+                            "mean": round(st.mean(pre), 1) if pre else None,
+                            "note": "trial 1 discarded as cold"}
 
     # --- CPU + thermals DURING load, and clock state ---
     print("  sampling CPU/thermals under load...")
