@@ -259,5 +259,29 @@ python3 harness/soak.py --concurrency 4 --minutes 10     # refuses without a the
   counts as a floor, and verify function in a browser before drawing quality conclusions.
 - Concurrency figures are **one-shot batch** (fire N, stop the clock when the last finishes),
   not steady-state. They are not comparable to published aggregate figures measured differently.
+### Known limitations, carried deliberately
+
+These survived four adversarial review passes and are recorded rather than fixed, because
+the honest answer in each case is that fixing them costs more than the risk they carry.
+
+- **acceptance-probe** compares profile ENDPOINTS, so the middle is unconstrained by
+  anything but the no-big-rises rule: `[79,40,39,38,37]` passes despite pos1 sitting far
+  outside every healthy sample. It is scoped to **k=5** and returns UNVERIFIED for any other
+  k — healthy decay is convex, so per-step thresholds do not transfer, and no healthy k=10
+  profile has ever been measured. Whether a fresh engine pre-registers all five per-position
+  counters is unknown; learning it requires a restart.
+- **thermal-guard cannot detect a pre-existing operator cap.** No `nvidia-smi` field reports
+  an `-lgc` lock, so this is physically undetectable, not an oversight. Do not run it on a
+  node you have deliberately capped.
+- **clock-parity** proves its load generation *completed*, not that the sampling window
+  overlapped it. A request queued behind a busy engine could generate after sampling ends.
+  It fails safe today; reproducing the failure needs a saturated engine.
+- **niah's near-miss means "a near-copy of the needle appears in the answer"** — retrieval
+  evidence, not answer correctness. A reply naming a variant while denying it has the code
+  counts. Retrieval and exact-match are therefore always reported separately.
+- **Notify-failure paths are unexercised by any test.** Forcing one risks a real page; a
+  harness would need an injectable notify command, which is a design change rather than a
+  patch.
+
 - The two stacks **cannot run simultaneously** — they contend for the same hardware — so every
   cross-stack comparison is sequential, hours apart, on a shared machine.
