@@ -15,9 +15,12 @@ returns after idle).
 
 THE PER-POSITION PROFILE IS THE REAL SIGNAL. A healthy k=5 drafter decays monotonically
 across draft positions. A drafter running with uninitialised weights does not — it
-collapses roughly flat. Measured healthy profile, 6 runs:
+collapses roughly flat. Measured healthy profile on 0731, n=6, this pinned prompt,
+uncapped clocks (2026-08-16):
 
-    pos0 74-79%   pos1 52-60%   pos2 38-46%   pos3 24-31%   pos4 15-20%
+    pos0 75-79%   pos1 53-59%   pos2 39-47%   pos3 29-35%   pos4 19-27%
+
+Minimum decay observed across those runs: 12.2 pp per position.
 
 Shape is far more diagnostic than the headline number, which a hard prompt depresses on
 its own. This probe grades the shape FIRST and the percentage second.
@@ -255,13 +258,20 @@ def main():
     ap.add_argument("--model", default=os.environ.get("PROBE_MODEL", "deepseek-v4-flash-dspark"))
     ap.add_argument("--n", type=int, default=int(os.environ.get("PROBE_N", "5")))
     ap.add_argument("--max-tokens", type=int, default=int(os.environ.get("PROBE_MAX_TOKENS", "400")))
-    # Floor 33% against a measured production mean of 42.8% on this pinned prompt
-    # (n=3: 43.0/40.2/45.3, sd 2.6) — that is ~3.8 sigma below, NOT the "~2 sigma" this
-    # comment used to claim. Deliberately conservative, but the sigma figure was wrong.
-    # ⚠️ The baseline was taken on the PREVIEW checkpoint; 0731 reads ~50.9%, so this floor
-    # is loose for a reason nobody has measured. Re-baseline before trusting it as tuned.
-    # It is NOT portable to another prompt — that is the whole point of the tool.
-    ap.add_argument("--floor", type=float, default=float(os.environ.get("PROBE_FLOOR", "33")))
+    # RE-BASELINED on the 0731 checkpoint, 2026-08-16, n=6 on this pinned prompt with
+    # uncapped clocks: 44.4/46.0/46.8/48.7/44.8/47.3 -> mean 46.33%, sd 1.61.
+    # The previous floor of 33 came from the PREVIEW checkpoint (mean 42.8, n=3) and sat
+    # 8.3 sigma below the current mean — it would have fired only on a catastrophe.
+    #
+    # ⚠️ 38 is NOT mean-3sd (that would be 41.5). The sd above is WITHIN-SESSION: one day,
+    # one clock state, one load condition. This repo has already measured that across
+    # sessions the drift is larger than within one, so a floor tuned to within-session
+    # variance would false-alarm on an ordinary busy afternoon. 38 sits ~5 sd below the
+    # mean, below the lowest reading ever recorded on EITHER checkpoint (40.2), and still
+    # halves the old gap. Tighten it only with a multi-day baseline.
+    #
+    # And it remains NOT portable to another prompt — that is the whole point of the tool.
+    ap.add_argument("--floor", type=float, default=float(os.environ.get("PROBE_FLOOR", "38")))
     ap.add_argument("--temperature", type=float, default=1.0)
     ap.add_argument("--top-p", type=float, default=0.95)
     ap.add_argument("--api-key-file", default=None,

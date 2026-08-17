@@ -55,12 +55,17 @@ per-position: pos0 79%  pos1 62%  pos2 48%  pos3 37%  pos4 28%
 HEALTHY
 ```
 
-⚠️ **The floor is not portable.** 33% sits below a measured mean of 42.8% *on this exact
-prompt* (n=3: 43.0/40.2/45.3, sd 2.6) — that is ~3.8σ, not the "~2σ" an earlier version of
-this file claimed. Conservative in the safe direction, but the σ figure was simply wrong.
-Change the prompt and the floor is meaningless, which is the entire point of the tool. The
-baseline also predates the 0731 checkpoint, which reads ~50.9%: re-baseline before treating
-33% as tuned rather than merely loose.
+⚠️ **The floor is not portable, and it is deliberately loose.** Re-baselined on the 0731
+checkpoint (n=6, this pinned prompt, uncapped clocks): **mean 46.3%, sd 1.61**. The previous
+floor of 33% came from the preview checkpoint and sat **8.3σ** below that — it would have
+fired only on a catastrophe. It is now **38%**.
+
+38 is *not* mean − 3sd (that would be 41.5). The sd is **within-session**: one day, one clock
+state, one load condition — and this repo has already measured that across-session drift
+exceeds within-session drift. A floor tuned to within-session variance would false-alarm on
+an ordinary busy afternoon. 38 sits ~5sd below the mean, below the lowest reading ever
+recorded on *either* checkpoint, and still halves the old gap. Tighten it only with a
+multi-day baseline. Change the prompt and it means nothing at all.
 
 ⚠️ **A self-test must prove each ARM, not just each case.** This defect was committed
 twice. First the decay rule was unproven, because the flat test case also had a weak

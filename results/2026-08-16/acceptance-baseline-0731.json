@@ -1,0 +1,67 @@
+{
+ "label": "acceptance-floor-baseline-0731",
+ "date": "2026-08-16",
+ "checkpoint": "deepseek-ai/DeepSeek-V4-Flash-0731",
+ "clocks": "uncapped, ~2500 MHz under load",
+ "prompt": "acceptance-probe pinned code-review prompt",
+ "max_tokens": 400,
+ "n": 6,
+ "acceptance_pct": [
+  44.4,
+  46.0,
+  46.8,
+  48.7,
+  44.8,
+  47.3
+ ],
+ "mean": 46.33,
+ "sd": 1.61,
+ "per_position_pct": [
+  [
+   78,
+   57,
+   39,
+   29,
+   19
+  ],
+  [
+   75,
+   56,
+   43,
+   32,
+   25
+  ],
+  [
+   78,
+   58,
+   44,
+   31,
+   23
+  ],
+  [
+   76,
+   59,
+   47,
+   35,
+   27
+  ],
+  [
+   75,
+   53,
+   41,
+   32,
+   22
+  ],
+  [
+   79,
+   59,
+   43,
+   32,
+   23
+  ]
+ ],
+ "min_decay_pp_per_step": 12.2,
+ "floor_before": 33,
+ "floor_after": 38,
+ "note": "Floor is NOT mean-3sd (41.5). The sd is within-session \u2014 one day, one clock state, one load condition \u2014 and across-session drift is known to be larger here. 38 sits ~5sd below the mean and below the lowest reading on either checkpoint."
+}
