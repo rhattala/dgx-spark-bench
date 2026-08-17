@@ -87,10 +87,27 @@ def status_from(d, now, interval):
     """
     if d is None:
         return 2, "UNVERIFIED: no heartbeat file — the guard has never run on this node"
-    own = d.get("interval")
-    src = "guard" if own else "caller (heartbeat records none)"
+    # ⚠️ THE HEARTBEAT IS UNTRUSTED INPUT even though this program wrote it. A string,
+    # zero, or an absurd value all arrived here uncaught: {"interval":"abc"} raised
+    # TypeError and the process exited rc=1 -- which this contract defines as "STOPPED
+    # CLEANLY", so a CORRUPT heartbeat read as an orderly shutdown. And interval=1e9 made
+    # a 30-day-old heartbeat report "alive", i.e. one fat-fingered flag blinds --status
+    # permanently. Validate and clamp; say so when the recorded value is unusable.
+    own, src = None, "caller (heartbeat records none)"
+    try:
+        cand = float(d.get("interval"))
+        if 1.0 <= cand <= 3600.0:
+            own, src = cand, "guard"
+        elif cand == cand:                       # a real number, just not a sane one
+            src = "caller (heartbeat interval %g is out of range)" % cand
+    except (TypeError, ValueError):
+        if d.get("interval") is not None:
+            src = "caller (heartbeat interval is not a number)"
     interval = own or interval
-    age = now - d.get("ts", 0)
+    try:
+        age = now - float(d.get("ts", 0))
+    except (TypeError, ValueError):
+        return 2, "UNVERIFIED: heartbeat timestamp is unreadable — treat as NOT protected"
     if not d.get("running"):
         return 1, ("STOPPED: guard exited cleanly %.0fs ago (capped_by_us=%s)"
                    % (age, d.get("capped_by_us")))
@@ -180,6 +197,15 @@ def self_test():
          {"ts": now - 25, "running": True, "temp": 55, "interval": 2}, 2),
         ("legacy heartbeat with no interval falls back to caller's",
          {"ts": now - 400, "running": True, "temp": 55}, 2),
+        # --- second-pass review: the heartbeat is untrusted input ---
+        ("interval is a STRING -> must not crash into rc=1",
+         {"ts": now - 400, "running": True, "temp": 55, "interval": "abc"}, 2),
+        ("absurd interval must NOT make a 30-day heartbeat 'alive'",
+         {"ts": now - 2592000, "running": True, "temp": 55, "interval": 1e9}, 2),
+        ("negative interval falls back, stays loud",
+         {"ts": now - 400, "running": True, "temp": 55, "interval": -5}, 2),
+        ("ts is a string -> UNVERIFIED, not a crash",
+         {"ts": "nope", "running": True, "temp": 55, "interval": 5}, 2),
     ]
     for label, d, want in scases:
         rc, msg = status_from(d, now, 5.0)
@@ -226,7 +252,13 @@ def main():
             except Exception as e:
                 print("UNVERIFIED: heartbeat unreadable (%s)" % e)
                 return 2
-        rc, msg = status_from(d, time.time(), a.interval)
+        try:
+            rc, msg = status_from(d, time.time(), a.interval)
+        except Exception as e:
+            # Never let an unexpected shape exit through a code that means something else.
+            print("UNVERIFIED: could not evaluate the heartbeat (%s) — treat as NOT "
+                  "protected" % type(e).__name__)
+            return 2
         print(msg)
         return rc
 

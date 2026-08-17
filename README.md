@@ -62,6 +62,21 @@ Change the prompt and the floor is meaningless, which is the entire point of the
 baseline also predates the 0731 checkpoint, which reads ~50.9%: re-baseline before treating
 33% as tuned rather than merely loose.
 
+⚠️ **A self-test must prove each ARM, not just each case.** This defect was committed
+twice. First the decay rule was unproven, because the flat test case also had a weak
+`pos0` that a *different* arm rejected. Fixing that made the **pos0 arm** unproven — with
+the stronger decay rule in place, deleting the pos0 comparison entirely left the whole
+suite green. A case two arms can each reject proves neither, and adding an arm can silently
+orphan an existing one. So coverage is now **measured, not asserted**: the self-test
+disables each arm in turn and fails if no case changes verdict.
+
+⚠️ **Scoped to k=5, and it says so.** An earlier version claimed per-step scaling made the
+decay rule "valid for k != 5". It isn't — healthy decay is convex, so the per-step average
+falls as k grows and an extrapolated healthy k=10 profile grades FLAT. Any other k is now
+UNVERIFIED rather than confidently wrong. The decay test also compares **endpoints**: the
+middle of the profile is unconstrained, so `[79,40,39,38,37]` passes despite pos1 sitting
+far outside every healthy sample.
+
 ⚠️ **Shape grading needs BOTH rules.** A "no big rises" test alone cannot see a flat
 profile — and flat is the fault it exists to catch. `[56,55,56,55,56]` and even
 `[56,61,66,71,76]` passed it. The self-test missed this because its flat case used a weak

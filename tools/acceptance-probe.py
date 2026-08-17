@@ -27,7 +27,7 @@ and accepted in that order; a positional parse silently mislabels them and produ
 plausible-looking acceptance rate that is arithmetic on the wrong counters.
 `--self-test` includes a negative control for exactly this.
 
-Exit codes:  0 healthy · 1 below floor · 2 profile looks broken · 3 probe error
+Exit codes:  0 healthy · 1 below floor · 2 shape broken OR ungradeable · 3 probe error
 """
 import argparse, json, os, sys, time, urllib.request, uuid
 
@@ -59,9 +59,18 @@ MONOTONIC_SLACK_PP = 6
 # because its FLAT case used pos0=30, which the POS0 arm rejects independently: the case
 # was over-determined, so it passed while the arm under test did nothing.
 # So require REAL decay too. Measured healthy (9 samples): pos0 74-81 -> pos4 15-30, i.e.
-# 11-13pp per step. A broken drafter is ~0. 8pp/step splits them with margin, and scaling
-# per STEP keeps it valid for k != 5.
+# 11-13pp per step. A broken drafter is ~0. 8pp/step splits them with margin.
+#
+# ⚠️ THIS IS CALIBRATED FOR k=5 AND ONLY k=5. An earlier version claimed per-step scaling
+# "keeps it valid for k != 5". It does not: measured healthy decay is CONVEX (steps of
+# ~22,14,14,9), so the per-step AVERAGE falls as k grows, and an extrapolated healthy k=10
+# profile grades FLAT. k is a multiple of MTP_NUM_TOKENS, so k=10 is the one step someone
+# would actually take. Rather than pretend, an unexpected k is UNVERIFIED.
 MIN_DECAY_PER_STEP_PP = 8
+EXPECTED_POSITIONS = 5
+# ⚠️ The decay test compares ENDPOINTS. The middle of the profile is unconstrained by
+# anything except the no-big-rises rule, so [79,40,39,38,37] passes despite pos1 sitting
+# far outside every healthy sample. Stated rather than silently implied.
 # A healthy drafter's first position is strong. Below this, the drafter itself is weak —
 # the signature of a loader/weight-mapping fault rather than a hard prompt.
 POS0_MIN_PCT = 55
@@ -85,29 +94,42 @@ def parse_metrics(raw):
     return out
 
 
-def grade(rate, prof, floor):
-    """Pure verdict. (exit_code, [lines]). Shape is judged BEFORE the headline number."""
+def grade(rate, prof, floor, arms=("shape", "pos0", "rise", "decay")):
+    """Pure verdict. (exit_code, [lines]). Shape is judged BEFORE the headline number.
+
+    `arms` exists so --self-test can DISABLE one arm at a time and prove that some case
+    depends on it. See self_test(): an arm no case sole-determines is an unproven arm.
+    """
     lines = []
+    if "shape" in arms:
+        if not prof:
+            lines.append("UNVERIFIED: no per-position data — cannot judge profile shape, "
+                         "and the headline percentage alone is not a health signal.")
+            return 2, lines
+        if len(prof) != EXPECTED_POSITIONS:
+            lines.append("UNVERIFIED: %d draft positions, expected %d. The thresholds here "
+                         "are calibrated for k=%d and healthy decay is convex, so they do "
+                         "not transfer to another k. Re-baseline before trusting a verdict."
+                         % (len(prof), EXPECTED_POSITIONS, EXPECTED_POSITIONS))
+            return 2, lines
     if not prof:
-        lines.append("UNVERIFIED: no per-position data — cannot judge profile shape, and "
-                     "the headline percentage alone is not a health signal.")
-        return 2, lines
-    if prof[0] < POS0_MIN_PCT:
+        return 2, ["UNVERIFIED: no per-position data."]
+    if "pos0" in arms and prof[0] < POS0_MIN_PCT:
         lines.append("UNHEALTHY: first draft position only %.0f%% — the drafter itself is "
                      "weak. That is a loader/weight-mapping signature, not a hard prompt."
                      % prof[0])
         return 2, lines
     monotonic = all(prof[i] >= prof[i + 1] - MONOTONIC_SLACK_PP
                     for i in range(len(prof) - 1))
-    if not monotonic:
+    if "rise" in arms and not monotonic:
         lines.append("UNHEALTHY: per-position profile rises. A healthy drafter loses ground "
                      "at every successive position.")
         return 2, lines
     steps = len(prof) - 1
-    if steps:
+    if "decay" in arms and steps:
         per_step = (prof[0] - prof[-1]) / steps
         if per_step < MIN_DECAY_PER_STEP_PP:
-            lines.append("UNHEALTHY: profile is FLAT — only %.1f pp of decay per position "
+            lines.append("UNHEALTHY: profile does not decay — only %.1f pp per position "
                          "(healthy is 11-13). pos0 %.0f%% -> pos%d %.0f%%. A drafter running "
                          "on badly-loaded weights collapses flat instead of decaying."
                          % (per_step, prof[0], steps, prof[-1]))
@@ -163,9 +185,11 @@ def self_test():
         ("FLAT at 60 (was HEALTHY)",      45.0, [60, 60, 60, 60, 60], 2),
         ("RISING slowly (was HEALTHY)",   45.0, [56, 61, 66, 71, 76], 2),
         ("4-position flat-low",           45.0, [58, 57, 58, 57],     2),
-        ("k=2 healthy decay",             45.0, [79, 62],             0),
-        ("k=2 flat",                      45.0, [79, 76],             2),
+        ("weak pos0 but healthy slope",   45.0, [50, 38, 26, 14, 2],  2),
         ("no per-position data at all",   45.0, [],                   2),
+        ("k=2 -> UNVERIFIED, not graded", 45.0, [79, 62],             2),
+        ("k=10 -> UNVERIFIED, not FLAT",  45.0, [74, 52, 38, 24, 15, 10, 8, 6, 5, 5], 2),
+        ("single position -> UNVERIFIED", 45.0, [60],                 2),
     ]
     for label, rate, prof, want in cases:
         got, _ = grade(rate, prof, 33.0)
@@ -173,6 +197,29 @@ def self_test():
         ok &= good
         print("    %-32s rc=%d want=%d  %s" % (label, got, want,
                                                "ok" if good else "*** BROKEN ***"))
+
+    # ── ARM ATTRIBUTION ──────────────────────────────────────────────────────────────
+    # ⚠️ THE DEFECT THIS EXISTS TO PREVENT, WHICH I COMMITTED TWICE. A case that two arms
+    # can each reject proves NEITHER. First the decay arm was unproven because the flat
+    # case had a weak pos0 (rejected by the pos0 arm); then, having fixed that, the POS0
+    # arm became unproven because the same case was now caught by decay. Deleting the pos0
+    # comparison entirely left the whole suite green.
+    #
+    # So do not assert coverage in a comment — MEASURE it. Disable each arm in turn and
+    # require that at least one case changes verdict. An arm no case depends on is an
+    # unproven arm, and this fails the suite rather than quietly passing.
+    print("\n  arm attribution — each arm must be SOLE-determining for some case")
+    all_arms = ("shape", "pos0", "rise", "decay")
+    for arm in all_arms:
+        without = tuple(x for x in all_arms if x != arm)
+        depends = [label for label, rate, prof, want in cases
+                   if grade(rate, prof, 33.0, arms=without)[0] != want]
+        good = bool(depends)
+        ok &= good
+        print("    %-8s %-46s %s"
+              % (arm, ("proven by: " + depends[0][:42]) if depends
+                 else "NO CASE DEPENDS ON THIS ARM",
+                 "ok" if good else "*** UNPROVEN ARM ***"))
 
     print("\n  parse_metrics() — negative control for the positional-parse trap")
     # Emitted in the order drafts, draft_tokens, accepted. A positional parse reads them

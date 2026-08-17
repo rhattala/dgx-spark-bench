@@ -64,14 +64,23 @@ def near_miss(needle, ans):
     """
     if not ans:
         return 0.0, False
+    starts = []
+    # Every occurrence, not just the first: "Not SPARK-NIAH-XXXXXXXX; the code is
+    # SPARK-NIAH-MKCBSUN" anchored on the decoy and scored 0.50.
     i = ans.find(NEEDLE_PREFIX)
-    if i < 0:
-        # No recognisable needle token at all — compare against the head, so a reply that
-        # simply does not contain one scores low rather than erroring.
-        cand = ans[:len(needle) + 6]
-    else:
-        cand = ans[i:i + len(needle) + 6]
-    sim = difflib.SequenceMatcher(None, needle, cand).ratio()
+    while i >= 0:
+        starts.append(i)
+        i = ans.find(NEEDLE_PREFIX, i + 1)
+    # ⚠️ THE CORRUPTION CAN HIT THE ANCHOR ITSELF. The real 248k slip was
+    # SPARK-NIAH- -> SPARK-NIA0-, so anchoring on the full prefix misses exactly the case
+    # this function exists for. Fall back to a shorter stem, then to the head.
+    if not starts:
+        j = ans.find(NEEDLE_PREFIX[:8])
+        starts = [j] if j >= 0 else [0]
+    # Trailing prose inflates the window and drags similarity down ("...MKCBSUN, as stated
+    # in the document" scored 0.818 and graded a flat FAIL), so try both window lengths.
+    sim = max(difflib.SequenceMatcher(None, needle, ans[st:st + L]).ratio()
+              for st in starts for L in (len(needle), len(needle) + 6))
     return sim, (needle not in ans) and sim >= 0.85
 
 
@@ -137,6 +146,15 @@ def main():
             ("refusal must fail",             "I could not find the code",             False),
             ("empty answer must fail",        "",                                      False),
             ("prefix only, no suffix",        "SPARK-NIAH-",                           False),
+            # --- second-pass review: all three of these graded FAIL before ---
+            ("slip with TRAILING prose",
+             "The code is SPARK-NIAH-MKCBSUN, as stated in the document.",             True),
+            ("CORRUPTED PREFIX (the real 248k slip)",
+             "The code is SPARK-NIA0-MKCBSUN6, per the relay station",                 True),
+            ("decoy needle first, real one second",
+             "Not SPARK-NIAH-XXXXXXXX; the code is SPARK-NIAH-MKCBSUN",                True),
+            ("decoy only, no real needle",
+             "Not SPARK-NIAH-XXXXXXXX; I could not find it",                           False),
         ]
         fixed = "SPARK-NIAH-MKCBSUN6"
         for label, reply, want in nm_cases:
@@ -176,7 +194,7 @@ def main():
             ans = (r["answer"] or "").strip()
             ok = needle in ans
             # ⚠️ DISTINGUISH RETRIEVAL FROM TRANSCRIPTION. Measured 2026-08-16: both
-            # "failures" at 74k and 148k tokens were SINGLE-CHARACTER errors
+            # "failures" at 74k and 148k tokens were 1-2 CHARACTER errors
             # (SPARK-NIAH-MKCBSUN6 -> ...MKCBSUN, SPARK-NIAH-... -> SPARK-NIA0-...).
             # The model FOUND the needle every time. Grading those as retrieval failures
             # would understate long-context capability and point debugging at the wrong
@@ -200,7 +218,7 @@ def main():
     print("  RETRIEVAL     %d/%d   (exact + near-miss: the needle was FOUND)"
           % (p + nm, len(graded)))
     if nm:
-        print("  -> %d near-miss(es): single-character transcription errors, not retrieval"
+        print("  -> %d near-miss(es): 1-2 character transcription errors, not retrieval"
               % nm)
     if u:
         print("  UNVERIFIED    %d" % u)

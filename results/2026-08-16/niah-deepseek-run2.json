@@ -137,5 +137,6 @@
    "answer": "SPARK-NIAH-CUGPZRHG",
    "needle": "SPARK-NIAH-CUGPZRHG"
   }
- ]
+ ],
+ "note": "FRESH RUN with new random needles, NOT a re-grade of the earlier file. The 2026-08-16 first run stored no needles, so it is machine-ungradeable forever; this run is graded end to end by the shipped grader and stores needle + similarity per probe."
 }
