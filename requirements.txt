@@ -1,0 +1,9 @@
+# Only the browser-driving parts need anything outside the standard library.
+# Every other harness and tool here is stdlib-only and runs on a bare python3.
+#
+#   harness/functional_check.py   drives generated pages in real Chrome
+#   tools/shoot-artifacts.py      screenshots those pages
+#
+# After installing, Playwright uses your EXISTING Chrome (channel="chrome") —
+# it does not download a browser.
+playwright>=1.40

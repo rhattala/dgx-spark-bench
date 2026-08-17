@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 results/**/raw/
 .DS_Store
+.venv/
+venv/
+env/

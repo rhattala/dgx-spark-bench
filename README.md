@@ -269,6 +269,49 @@ everything is the same trap it was built to escape.
 endpoint, clock state, reasoning setting, token budgets, and per-check detail. Numbers from
 different prompts or clock states are **not** comparable and the files say so.
 
+## Running this yourself
+
+Almost nothing here is specific to my hardware. What it needs:
+
+**An OpenAI-compatible endpoint.** Every harness takes `--base`/`--url` and `--model`, so
+vLLM, SGLang, llama.cpp, Ollama or a hosted API all work. Nothing assumes DeepSeek or
+DGX Spark.
+
+**Python 3, and that is usually all.** Nine of the eleven files are **stdlib-only** — no
+install step, no virtualenv, just run them.
+
+```bash
+git clone https://github.com/rhattala/dgx-spark-bench && cd dgx-spark-bench
+
+# prove the graders can fail, before trusting any result
+python3 harness/api_suite.py --self-test
+python3 tools/acceptance-probe.py --self-test
+
+# then point them at your endpoint
+python3 harness/api_suite.py     --base http://localhost:8000 --model your-model
+python3 harness/dspark-bench.py  --url  http://localhost:8000/v1/chat/completions \
+                                 --model your-model --repeat 3
+```
+
+**Two files need Playwright** — the ones that drive a real browser:
+
+```bash
+pip install -r requirements.txt     # playwright only
+python3 harness/functional_check.py --self-test
+```
+
+It uses your **existing Chrome** (`channel="chrome"`), so there is no browser download.
+
+**Two files need SSH to your nodes**, because they read GPU state directly:
+`tools/clock-parity.py` (`--nodes host1,host2`) and `harness/soak.py`. Everything else talks
+only to the endpoint. `tools/thermal-guard.py` runs *on* a node and needs
+`sudo -n nvidia-smi` there — or `--dry-run` anywhere, which logs what it would do.
+
+⚠️ **Two things are calibrated to this deployment and will not transfer:** the acceptance
+probe's floor and its per-position bands are pinned to one prompt on one model — that is the
+entire point of the tool, and it says so at the top of the file. Re-baseline before treating
+either as tuned. Everything else is endpoint-agnostic.
+
 ## Reproducing
 
 ```bash
