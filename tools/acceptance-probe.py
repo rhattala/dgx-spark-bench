@@ -109,7 +109,9 @@ def grade(rate, prof, floor, arms=("shape", "pos0", "rise", "decay")):
         if len(prof) != EXPECTED_POSITIONS:
             lines.append("UNVERIFIED: %d draft positions, expected %d. The thresholds here "
                          "are calibrated for k=%d and healthy decay is convex, so they do "
-                         "not transfer to another k. Re-baseline before trusting a verdict."
+                         "not transfer. This can also mean the drafter is so broken that a "
+                         "position never registered a counter. Re-baseline before trusting "
+                         "any verdict here."
                          % (len(prof), EXPECTED_POSITIONS, EXPECTED_POSITIONS))
             return 2, lines
     if not prof:
@@ -184,7 +186,7 @@ def self_test():
         ("FLAT at 56 (was HEALTHY)",      45.0, [56, 55, 56, 55, 56], 2),
         ("FLAT at 60 (was HEALTHY)",      45.0, [60, 60, 60, 60, 60], 2),
         ("RISING slowly (was HEALTHY)",   45.0, [56, 61, 66, 71, 76], 2),
-        ("4-position flat-low",           45.0, [58, 57, 58, 57],     2),
+        ("wrong k (4 positions)",         45.0, [58, 57, 58, 57],     2),
         ("weak pos0 but healthy slope",   45.0, [50, 38, 26, 14, 2],  2),
         ("no per-position data at all",   45.0, [],                   2),
         ("k=2 -> UNVERIFIED, not graded", 45.0, [79, 62],             2),

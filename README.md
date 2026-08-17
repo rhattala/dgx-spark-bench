@@ -27,7 +27,7 @@ the distinction changes every sizing calculation.
 | `harness/api_suite.py` | **the server, not the model** — OpenAI-compat contract, streaming, tool calls, error handling, security posture |
 | `harness/soak.py` | sustained-load soak with per-node thermal + clock telemetry |
 | `harness/qwen38-clock-probe.py` | decode / prefill / concurrency probe, endpoint-agnostic |
-| `harness/niah.py` | long-context retrieval — random unguessable needles, cache-defeating |
+| `harness/niah.py` | long-context **retrieval** — random unguessable needles, cache-defeating |
 | `tools/acceptance-probe.py` | speculative-decoding health by **per-position profile**, not by a bare percentage |
 | `tools/clock-parity.py` | asserts every node shares one clock policy — **must run under load** |
 | `tools/thermal-guard.py` | cap-on-hot / release-on-cool, with ownership, self-limit and liveness |

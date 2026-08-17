@@ -52,9 +52,16 @@ NEEDLE_PREFIX = "SPARK-NIAH-"
 
 
 def near_miss(needle, ans):
-    """(similarity, is_near_miss). A near-miss is a TRANSCRIPTION slip on a needle that was
-    FOUND — not a retrieval failure. Grading those as failures understates long-context
-    capability and points debugging at the wrong thing.
+    """(similarity, is_near_miss).
+
+    ⚠️ WHAT THIS ACTUALLY MEASURES: *a near-copy of the needle appears somewhere in the
+    answer* — not "the answer was a near-copy". Since scoring is a max over occurrences,
+    "I saw SPARK-NIAH-MKCBSUN7 but the code is SPARK-NIAH-QQQQQQQQ" counts as a near-miss,
+    and so does an answer that names a variant while DENYING it has the code.
+    That is acceptable for the RETRIEVAL aggregate and only for that: emitting 7 of 8
+    random suffix characters requires having read the needle, so a near-copy is proof of
+    retrieval however the sentence around it is phrased. It is NOT evidence that the model
+    answered correctly. Report retrieval and exact-match separately, never merged.
 
     ⚠️ ANCHOR ON THE PREFIX INSIDE THE ANSWER. This used to compare against `ans[:len+6]`,
     anchored at position 0, so it only fired on a bare answer: the same one-character error

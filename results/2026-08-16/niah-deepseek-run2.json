@@ -1,5 +1,5 @@
 {
- "label": "deepseek-0731-regraded",
+ "label": "deepseek-0731-run2",
  "model": "deepseek-v4-flash-dspark",
  "passed": 11,
  "graded": 12,

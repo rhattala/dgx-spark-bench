@@ -54,6 +54,10 @@ DEFAULT_INTERVAL = 5.0
 DEFAULT_MAX_RUNTIME = 24 * 3600.0
 DEFAULT_CAP_MHZ = 2000
 STALE_FACTOR = 6          # heartbeat older than INTERVAL * this == not alive
+# The ONE range the loop and --status agree on. Validated at LAUNCH as well as on read: a
+# value only the writer accepts is a value the reader must refuse, and refusing it after
+# the fact is how a live guard gets called dead, or a dead one alive.
+INTERVAL_MIN, INTERVAL_MAX = 1.0, 3600.0
 
 _state = {"capped_by_us": False, "dry_run": False, "cap_mhz": DEFAULT_CAP_MHZ}
 
@@ -79,6 +83,27 @@ def decide(temp, capped_by_us, cool_streak, trip, clear, clear_cycles):
     return "hold", cool_streak
 
 
+def sane_interval(v):
+    """(value, reason_or_None). Clamps into the range --status will accept.
+
+    ⚠️ `--interval` was a bare float at launch while --status trusted only [1,3600], so the
+    two disagreed about the same number. Executed: a guard legitimately started at 0.5 s and
+    SIGKILLed 10 s earlier read **OK: guard alive** — the exact false-OK this mechanism
+    exists to prevent, resurrected for sub-second intervals; and one started at 7200 s read
+    UNVERIFIED forever while perfectly healthy. Clamp where the value is SET, so read-side
+    clamping only ever fires on genuine corruption.
+    """
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return DEFAULT_INTERVAL, "not a number, using %g" % DEFAULT_INTERVAL
+    if f < INTERVAL_MIN:
+        return INTERVAL_MIN, "%g is below the %g s floor --status can verify" % (f, INTERVAL_MIN)
+    if f > INTERVAL_MAX:
+        return INTERVAL_MAX, "%g exceeds the %g s ceiling --status can verify" % (f, INTERVAL_MAX)
+    return f, None
+
+
 def status_from(d, now, interval):
     """Pure. -> (exit_code, message). `d` is the parsed heartbeat, or None if absent.
 
@@ -96,7 +121,7 @@ def status_from(d, now, interval):
     own, src = None, "caller (heartbeat records none)"
     try:
         cand = float(d.get("interval"))
-        if 1.0 <= cand <= 3600.0:
+        if INTERVAL_MIN <= cand <= INTERVAL_MAX:
             own, src = cand, "guard"
         elif cand == cand:                       # a real number, just not a sane one
             src = "caller (heartbeat interval %g is out of range)" % cand
@@ -214,6 +239,18 @@ def self_test():
         print("    %-34s rc=%d want=%d  %s" % (label, rc, want,
                                                "ok" if good else "*** BROKEN ***"))
 
+    print("\n  sane_interval() — the launcher must not write what --status refuses")
+    for label, given, want in [("sub-second clamps up", 0.5, INTERVAL_MIN),
+                               ("huge clamps down", 7200, INTERVAL_MAX),
+                               ("in range passes through", 7.0, 7.0),
+                               ("junk falls back", "abc", DEFAULT_INTERVAL),
+                               ("negative clamps up", -5, INTERVAL_MIN)]:
+        got, _ = sane_interval(given)
+        good = got == want
+        ok &= good
+        print("    %-26s %-6s -> %-7s want %-7s %s" % (label, given, got, want,
+                                                       "ok" if good else "*** BROKEN ***"))
+
     print("\n  %s\n" % ("HARNESS TRUSTWORTHY" if ok else "*** BROKEN — DO NOT TRUST IT ***"))
     return 0 if ok else 1
 
@@ -253,7 +290,7 @@ def main():
                 print("UNVERIFIED: heartbeat unreadable (%s)" % e)
                 return 2
         try:
-            rc, msg = status_from(d, time.time(), a.interval)
+            rc, msg = status_from(d, time.time(), sane_interval(a.interval)[0])
         except Exception as e:
             # Never let an unexpected shape exit through a code that means something else.
             print("UNVERIFIED: could not evaluate the heartbeat (%s) — treat as NOT "
@@ -261,6 +298,10 @@ def main():
             return 2
         print(msg)
         return rc
+
+    a.interval, why = sane_interval(a.interval)
+    if why:
+        print("[guard] interval clamped to %g s: %s" % (a.interval, why), flush=True)
 
     _state["dry_run"] = a.dry_run
     _state["cap_mhz"] = a.cap_mhz
