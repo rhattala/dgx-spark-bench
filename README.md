@@ -376,23 +376,31 @@ the honest answer in each case is that fixing them costs more than the risk they
 - The two stacks **cannot run simultaneously** — they contend for the same hardware — so every
   cross-stack comparison is sequential, hours apart, on a shared machine.
 
-## Thermal zone identification (novel)
+## Thermal zone identification — RETRACTED
 
-DGX Spark exposes 7 thermal zones, all reporting the type string `acpitz` with **no labels**.
-They cannot be named from the system. Measured behaviourally on two nodes:
+An earlier version of this section claimed that thermal zone 2 is GPU-adjacent on one node and
+not the other, and concluded that zone indices are not portable between identical machines.
 
-| load | result |
-|---|---|
-| CPU-only | every zone rose within **1.5 °C** of every other — there is no CPU-specific rail |
-| GPU-only | zones split into two families ~**12 °C** apart |
+**That claim was wrong and is withdrawn.** It came from a single ~90 s GPU probe. Checked
+against 924 GPU-hot and 38 idle samples per node from `results/2026-08-18/telemetry.jsonl`, both
+nodes have the **same** topology:
 
-| node | GPU-adjacent zones |
-|---|---|
-| spark-1 | 0, 2, 4, 5 |
-| spark-2 | 0, 4, 5 |
+| node | GPU-adjacent zones | zone 2 rise |
+|---|---|---|
+| spark-1 | 0, 2, 4, 5 | +41.9 °C |
+| spark-2 | 0, 2, 4, 5 | +39.1 °C |
 
-**Zone 2 is GPU-adjacent on one node and not the other**, on two supposedly identical machines.
-So a zone index is not portable, and any monitoring that hardcodes one is asserting something
-it did not measure. Read `max()` across all zones — which is what the thermal guard does.
+Zone 2 simply warms more slowly on spark-2; a short probe caught it mid-transient. The error is
+the same one that produced an earlier retracted claim that one node ran 5 °C hotter — **a single
+measurement generalised into a property.**
 
-See [`tools/zone-map.py`](tools/zone-map.py).
+What does survive, and is worth keeping:
+
+* All 7 zones report the type string `acpitz` with **no labels**, so they cannot be named from
+  the system — only classified by behaviour.
+* **CPU-only load raises every zone within ~1.5 °C of every other**: there is no CPU-specific
+  rail. Confirmed on both nodes.
+* **GPU load separates them into two families ~11 °C apart**: {0,2,4,5} against {1,3,6}.
+* Monitoring should read `max()` across all zones rather than trusting any index — which is what
+  the thermal guard already does.
+

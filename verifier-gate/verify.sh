@@ -10,8 +10,11 @@ REPO="${1:-.}"
 WORKERS="${WORKERS:-4}"
 cd "$REPO" || { echo "usage: verify.sh /path/to/llm-as-a-verifier"; exit 2; }
 
+SRC="$(cd "$(dirname "$0")" && pwd)"
 for f in verify_run.py run_and_gate.sh; do
-  [ -f "$f" ] || cp "$(dirname "$(readlink -f "$0")")/$f" . 2>/dev/null
+  if [ ! -f "$f" ]; then
+    cp "$SRC/$f" . || { echo "could not copy $f from $SRC — aborting"; exit 2; }
+  fi
 done
 
 echo "==> running best-of-3, K=1, all criteria, ${WORKERS} workers"

@@ -138,24 +138,26 @@ cost is the verifier's own analysis generations, not the extra samples.
 On long agent traces (~95k tokens) it is ~21 min/task at K=1. So: a deliberate
 "do this properly" invocation, or an overnight batch. Not every turn.
 
-## Recommended configuration
+## Configuration — WITHDRAWN pending honest re-measurement
 
-Measured across 40 ring shufflings on a completed 576-entry cache (config variants are strict
-subsets of a full run, so they cost nothing to evaluate):
+This section previously recommended K=1 with all three criteria, based on an ablation run
+offline against a completed 576-entry cache.
 
-| config | mean score /89 | sd | scoring calls |
-|---|---|---|---|
-| K=2, all 3 criteria | 76.38 | 0.48 | 576 |
-| **K=1, all 3 criteria** | **76.42** | 0.86 | **276** |
-| K=1, single criterion | 75.67 | 0.82 | 86 |
+**That ablation was invalid and the recommendation is withdrawn.** The cache holds only **4 of
+the 6** possible directed pairs per task — the tournament scores only the pairs it needs.
+Re-shuffling the ring to average over seeds demands pairs that were never scored, and
+`directed_reward` silently defaults a missing entry to **0.5**. Audited directly: **6,000 of
+28,800 lookups (20.8%) were fabricated 0.5/0.5 ties.**
 
-**Use K=1 with all three criteria.** Identical accuracy to K=2 at half the compute. Dropping to
-one criterion saves more but costs ~0.7 tasks — worse in 21 of 40 shufflings, better in 5.
+That is precisely the failure this gate exists to catch, committed in our own follow-up
+analysis and published as advice. It is left described here rather than deleted, because the
+lesson is the point: **an offline ablation over a cache is only valid for configurations whose
+keys the cache actually contains.**
 
-⚠️ **Do not compare configs on a single seed.** The standard deviation is ~0.5–0.9 tasks and the
-differences between configs are ~0.7. Our first single-seed reading showed the cheapest config
-tying the most expensive one; averaging over 40 shufflings showed it losing consistently.
+The one claim that survived every reconstruction method is that **K=1 performs about the same as
+K=2**. Whether a single criterion is cheaper-but-worse is genuinely unresolved: different
+reconstructions disagree on the sign.
 
-```bash
-python scripts/run_bo3.py --n-evaluations 1     # K=1, all criteria
-```
+To settle it honestly, score the ~288 missing reversed-ring entries once — roughly half a run —
+after which every configuration and shuffling is computable offline with no fabrication.
+

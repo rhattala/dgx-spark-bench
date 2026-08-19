@@ -12,13 +12,15 @@ MEASURED 2026-08-19 on two supposedly identical GB10 nodes:
                   -> there is no CPU-specific rail
   GPU-only load   zones separate into two families ~12 C apart
 
-  spark-1 GPU-adjacent: 0, 2, 4, 5      spark-2 GPU-adjacent: 0, 4, 5
+  both nodes GPU-adjacent: 0, 2, 4, 5   distant: 1, 3, 6
 
-  ** zone 2 is GPU-adjacent on one node and not the other. **
+A short probe once suggested the two nodes differed here. They do not — that was a
+thermal transient caught mid-rise, and the claim was retracted. Classify from
+STEADY-STATE samples, not a single 90 s burst: zone 2 on one node needed several
+minutes to reach its plateau and looked "distant" until it did.
 
-That last point is the reason this script exists: you cannot hardcode a zone
-index and expect it to mean the same thing on the next machine. The thermal guard
-is correct to read max() across all zones rather than trusting an index.
+Read max() across all zones rather than trusting an index, which is what the
+thermal guard already does.
 
 Usage:  zone-map.py spark-1 spark-2
 """
@@ -68,12 +70,12 @@ def main():
         print(f"  {h}: rise {['%+.1f'%x for x in d]}  spread {max(d)-min(d):.1f} C")
         print(f"       -> {'uniform: no CPU-specific rail' if max(d)-min(d) < 3 else 'NON-uniform: a CPU rail may exist'}\n")
 
-    print("Phase 2 — run a GPU-heavy prefill against the engine, then re-run with")
-    print("          --gpu-phase to classify. Kept manual: this script must not")
-    print("          decide on its own how to load your serving stack.\n")
-    print("Reference result (2026-08-19, two GB10 nodes):")
-    print("  spark-1 GPU-adjacent 0,2,4,5   spark-2 GPU-adjacent 0,4,5")
-    print("  zone 2 differs between nodes -> never hardcode a zone index.")
+    print("Phase 2 — GPU classification is deliberately NOT automated here: this")
+    print("          script must not decide how to load your serving stack. Put the")
+    print("          engine under sustained GPU load for several MINUTES (not one")
+    print("          burst), sample zones repeatedly, and compare medians.\n")
+    print("Reference (2026-08-18, 924 hot vs 38 idle samples per node, 2x GB10):")
+    print("  GPU-adjacent 0,2,4,5   distant 1,3,6   -- identical on both nodes")
 
 
 if __name__ == "__main__":
