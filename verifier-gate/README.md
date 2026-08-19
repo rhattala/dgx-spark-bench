@@ -120,6 +120,24 @@ suggests, because the tournament aggregates 6 scoring calls over 4 distinct pair
 a single run can land three points either side on luck alone. That, rather than any shift in
 the average, is the reason to fix it.
 
+
+## What it costs (measured, not estimated)
+
+End-to-end best-of-3 on short outputs (~1k chars), 2× DGX Spark GB10:
+
+| stage | time |
+|---|---|
+| generate 3 candidates **in parallel** | 6.5 s |
+| verify — 12 scoring calls at c=12 | 34.9 s |
+| **total** | **41.4 s** |
+| a single unverified answer | 4.1 s |
+
+**Overhead is ~37 s.** Generating N candidates is nearly free if you do it in parallel — the
+cost is the verifier's own analysis generations, not the extra samples.
+
+On long agent traces (~95k tokens) it is ~21 min/task at K=1. So: a deliberate
+"do this properly" invocation, or an overnight batch. Not every turn.
+
 ## Recommended configuration
 
 Measured across 40 ring shufflings on a completed 576-entry cache (config variants are strict
