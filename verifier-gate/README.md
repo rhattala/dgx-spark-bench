@@ -122,3 +122,25 @@ suggests, because the tournament aggregates 6 scoring calls over 4 distinct pair
 **The bug inflates variance far more than it biases the mean**: the spread runs 80.9%–88.8%, so
 a single run can land three points either side on luck alone. That, rather than any shift in
 the average, is the reason to fix it.
+
+## Recommended configuration
+
+Measured across 40 ring shufflings on a completed 576-entry cache (config variants are strict
+subsets of a full run, so they cost nothing to evaluate):
+
+| config | mean score /89 | sd | scoring calls |
+|---|---|---|---|
+| K=2, all 3 criteria | 76.38 | 0.48 | 576 |
+| **K=1, all 3 criteria** | **76.42** | 0.86 | **276** |
+| K=1, single criterion | 75.67 | 0.82 | 86 |
+
+**Use K=1 with all three criteria.** Identical accuracy to K=2 at half the compute. Dropping to
+one criterion saves more but costs ~0.7 tasks — worse in 21 of 40 shufflings, better in 5.
+
+⚠️ **Do not compare configs on a single seed.** The standard deviation is ~0.5–0.9 tasks and the
+differences between configs are ~0.7. Our first single-seed reading showed the cheapest config
+tying the most expensive one; averaging over 40 shufflings showed it losing consistently.
+
+```bash
+python scripts/run_bo3.py --n-evaluations 1     # K=1, all criteria
+```
