@@ -1,35 +1,32 @@
 # verifier-gate
 
-Part of [dual-dgx-spark-bench](https://github.com/rhattala/dual-dgx-spark-bench) —
-tooling for a 2-node NVIDIA DGX Spark (GB10) cluster.
+**Run a benchmark, and refuse to believe the number unless it survives a check.**
 
-A completeness-and-integrity gate for [llm-as-a-verifier](https://github.com/llm-as-a-verifier/llm-as-a-verifier)
-runs, and the negative controls that prove it works.
+```bash
+./verify.sh /path/to/llm-as-a-verifier
+```
 
-Built while running the Terminal-Bench 2.1 self-verification benchmark on a self-hosted
-2× DGX Spark cluster. Full write-up: `../docs/verifying-the-verifier.pdf`.
+Exit 0 = the score is real. Anything else = do not publish it.
 
-## Why this exists
+## Why you want this
 
-**A benchmark run against a completely dead endpoint scores 79.8% and exits 0.**
+A run against a **dead port** scores **79.8%** and exits cleanly:
 
 ```
-Method                               Score     Rate
-------------------------------------------------------------------------
 Pass@1                         70.67/89    79.4%
-LLM-as-a-Verifier                 71/89    79.8%   ← made of nothing
+LLM-as-a-Verifier                 71/89    79.8%   <- made of nothing
 Oracle (Bo3)                      82/89    92.1%
 Verifier tokens (0 verifier calls)
 ```
 
-Every one of the 576 scoring calls failed with `Connection error`. The framework scores a
-failed call as a 0.5/0.5 tie by default, so the run completed normally and printed a plausible
-result sitting exactly where a real one would — above the floor, below the ceiling. The only
-honest tell is `0 verifier calls`, buried in a token-accounting block.
+Failed calls become 0.5 ties, so the run completes and prints a plausible number. Most
+harnesses do some version of this. Point yours at a closed port and find out.
 
-That is not a criticism unique to this framework. **Any harness that degrades failures into
-neutral scores can manufacture a believable number from nothing.** If you run benchmarks, point
-yours at a closed port and see whether it notices.
+Using it caught a real bug: **22% of every score was being silently destroyed**
+([issue #10](https://github.com/llm-as-a-verifier/llm-as-a-verifier/issues/10),
+[PR #11](https://github.com/llm-as-a-verifier/llm-as-a-verifier/pull/11)).
+
+---
 
 ## What the gate checks
 

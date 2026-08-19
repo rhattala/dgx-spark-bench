@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# One command. Runs a verified best-of-3 and refuses to print a number it cannot trust.
+#
+#   ./verify.sh /path/to/llm-as-a-verifier
+#
+# Uses the recommended config (K=1, all three criteria): same accuracy as K=2 at
+# half the compute, measured over 40 ring shufflings.
+set -uo pipefail
+REPO="${1:-.}"
+WORKERS="${WORKERS:-4}"
+cd "$REPO" || { echo "usage: verify.sh /path/to/llm-as-a-verifier"; exit 2; }
+
+for f in verify_run.py run_and_gate.sh; do
+  [ -f "$f" ] || cp "$(dirname "$(readlink -f "$0")")/$f" . 2>/dev/null
+done
+
+echo "==> running best-of-3, K=1, all criteria, ${WORKERS} workers"
+LLMV_TIMEOUT="${LLMV_TIMEOUT:-1800}" WORKERS="$WORKERS" \
+  ./run_and_gate.sh 2>&1 | tail -40
+rc=${PIPESTATUS[0]}
+
+echo
+if [ "$rc" -eq 0 ]; then
+  echo "==> GATE PASSED — the score above came from measured data."
+else
+  echo "==> GATE DID NOT PASS (rc=$rc). Do NOT publish the number above."
+  echo "    rc=1 something is provably wrong (missing scores, or ties that were never measured)"
+  echo "    rc=2 nothing provably wrong, but completeness could not be established"
+fi
+exit $rc
