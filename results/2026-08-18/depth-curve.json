@@ -1,0 +1,66 @@
+{
+  "model": "deepseek-v4-flash-dspark",
+  "clocks": {
+    "spark-1": "2405 MHz, 3003 MHz, 45",
+    "spark-2": "2398 MHz, 3003 MHz, 48"
+  },
+  "rows": [
+    {
+      "prompt_tokens": 66237,
+      "completion_tokens": 3,
+      "seconds": 35.16,
+      "prefill_tok_s": 1883.9,
+      "target_depth": 25000
+    },
+    {
+      "prompt_tokens": 66310,
+      "completion_tokens": 3,
+      "seconds": 34.16,
+      "prefill_tok_s": 1941.2,
+      "target_depth": 25000
+    },
+    {
+      "prompt_tokens": 131891,
+      "completion_tokens": 3,
+      "seconds": 72.19,
+      "prefill_tok_s": 1827.1,
+      "target_depth": 50000
+    },
+    {
+      "prompt_tokens": 132341,
+      "completion_tokens": 3,
+      "seconds": 72.15,
+      "prefill_tok_s": 1834.3,
+      "target_depth": 50000
+    },
+    {
+      "prompt_tokens": 264915,
+      "completion_tokens": 3,
+      "seconds": 161.97,
+      "prefill_tok_s": 1635.6,
+      "target_depth": 100000
+    },
+    {
+      "prompt_tokens": 264855,
+      "completion_tokens": 3,
+      "seconds": 161.53,
+      "prefill_tok_s": 1639.6,
+      "target_depth": 100000
+    },
+    {
+      "prompt_tokens": 529979,
+      "completion_tokens": 3,
+      "seconds": 396.02,
+      "prefill_tok_s": 1338.3,
+      "target_depth": 200000
+    },
+    {
+      "prompt_tokens": 530240,
+      "completion_tokens": 3,
+      "seconds": 396.32,
+      "prefill_tok_s": 1337.9,
+      "target_depth": 200000
+    }
+  ],
+  "note": "cold prefill, single request, unique filler prompt"
+}
