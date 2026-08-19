@@ -10,7 +10,7 @@ MEASURED 2026-08-19 on two supposedly identical GB10 nodes:
 
   CPU-only load   every zone rose within 1.5 C of every other
                   -> there is no CPU-specific rail
-  GPU-only load   zones separate into two families ~12 C apart
+  GPU-only load   zones separate into two families ~9.5 C apart
 
   both nodes GPU-adjacent: 0, 2, 4, 5   distant: 1, 3, 6
 

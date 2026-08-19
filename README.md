@@ -400,7 +400,8 @@ What does survive, and is worth keeping:
   the system — only classified by behaviour.
 * **CPU-only load raises every zone within ~1.5 °C of every other**: there is no CPU-specific
   rail. Confirmed on both nodes.
-* **GPU load separates them into two families ~11 °C apart**: {0,2,4,5} against {1,3,6}.
+* **GPU load separates them into two families ~9.5 °C apart** — measured from 924 hot vs 38 idle
+  samples per node: GPU-adjacent {0,2,4,5} mean +40.6/+38.5, distant {1,3,6} mean +30.9/+29.2.
 * Monitoring should read `max()` across all zones rather than trusting any index — which is what
   the thermal guard already does.
 
