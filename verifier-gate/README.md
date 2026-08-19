@@ -1,5 +1,8 @@
 # verifier-gate
 
+Part of [dual-dgx-spark-bench](https://github.com/rhattala/dual-dgx-spark-bench) —
+tooling for a 2-node NVIDIA DGX Spark (GB10) cluster.
+
 A completeness-and-integrity gate for [llm-as-a-verifier](https://github.com/llm-as-a-verifier/llm-as-a-verifier)
 runs, and the negative controls that prove it works.
 

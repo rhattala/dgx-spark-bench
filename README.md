@@ -17,6 +17,17 @@ and the harness is what caught it.
 > more confident one is wrong. The numbers are evidence about this cluster. The traps are
 > general.
 
+## verifier-gate
+
+A completeness-and-integrity gate for [llm-as-a-verifier](https://github.com/llm-as-a-verifier/llm-as-a-verifier)
+runs, plus the negative controls that prove it works — including the one that matters:
+**a benchmark run against a dead endpoint scores 79.8% and exits 0.**
+
+Found an off-by-one upstream that was silently turning 22% of scores into neutral ties
+([issue #10](https://github.com/llm-as-a-verifier/llm-as-a-verifier/issues/10),
+[PR #11](https://github.com/llm-as-a-verifier/llm-as-a-verifier/pull/11)).
+See [`verifier-gate/`](verifier-gate/) and the write-up in [`docs/`](docs/).
+
 ## Hardware
 
 | | |
@@ -364,14 +375,3 @@ the honest answer in each case is that fixing them costs more than the risk they
 
 - The two stacks **cannot run simultaneously** — they contend for the same hardware — so every
   cross-stack comparison is sequential, hours apart, on a shared machine.
-
-## verifier-gate
-
-A completeness-and-integrity gate for [llm-as-a-verifier](https://github.com/llm-as-a-verifier/llm-as-a-verifier)
-runs, plus the negative controls that prove it works — including the one that matters:
-**a benchmark run against a dead endpoint scores 79.8% and exits 0.**
-
-Found an off-by-one upstream that was silently turning 22% of scores into neutral ties
-([issue #10](https://github.com/llm-as-a-verifier/llm-as-a-verifier/issues/10),
-[PR #11](https://github.com/llm-as-a-verifier/llm-as-a-verifier/pull/11)).
-See [`verifier-gate/`](verifier-gate/) and the write-up in [`docs/`](docs/).
