@@ -375,3 +375,24 @@ the honest answer in each case is that fixing them costs more than the risk they
 
 - The two stacks **cannot run simultaneously** — they contend for the same hardware — so every
   cross-stack comparison is sequential, hours apart, on a shared machine.
+
+## Thermal zone identification (novel)
+
+DGX Spark exposes 7 thermal zones, all reporting the type string `acpitz` with **no labels**.
+They cannot be named from the system. Measured behaviourally on two nodes:
+
+| load | result |
+|---|---|
+| CPU-only | every zone rose within **1.5 °C** of every other — there is no CPU-specific rail |
+| GPU-only | zones split into two families ~**12 °C** apart |
+
+| node | GPU-adjacent zones |
+|---|---|
+| spark-1 | 0, 2, 4, 5 |
+| spark-2 | 0, 4, 5 |
+
+**Zone 2 is GPU-adjacent on one node and not the other**, on two supposedly identical machines.
+So a zone index is not portable, and any monitoring that hardcodes one is asserting something
+it did not measure. Read `max()` across all zones — which is what the thermal guard does.
+
+See [`tools/zone-map.py`](tools/zone-map.py).
