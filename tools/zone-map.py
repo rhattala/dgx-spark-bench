@@ -6,10 +6,12 @@ named from the system. A dashboard that prints "CPU temp" beside one of them is
 asserting something it never measured. The only honest identification is to watch
 which zones move under which load.
 
-MEASURED 2026-08-19 on two supposedly identical GB10 nodes:
+MEASURED 2026-08-18 on two GB10 nodes:
 
   CPU-only load   every zone rose within 1.5 C of every other
-                  -> there is no CPU-specific rail
+                  -> no CPU-specific rail. PROVENANCE: a single 70 s spin-load
+                  probe, UNREPLICATED. Re-run phase 1 to confirm; it takes ~2 min
+                  on an idle cluster.
   GPU-only load   zones separate into two families ~9.5 C apart
 
   both nodes GPU-adjacent: 0, 2, 4, 5   distant: 1, 3, 6

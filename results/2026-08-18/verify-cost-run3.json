@@ -1,0 +1,123 @@
+{
+  "model": "deepseek-v4-flash-dspark",
+  "prompt": "Write a Python function that merges two sorted lists into one sorted list. Explain the time complexity in one sentence.",
+  "prompt_chars": 119,
+  "max_tokens": 300,
+  "temperature": 0.7,
+  "clocks_pre_run": {
+    "spark-1": "2405 MHz, 3003 MHz, 50",
+    "spark-2": "2398 MHz, 3003 MHz, 50"
+  },
+  "levels": [
+    {
+      "concurrency": 1,
+      "wall_s": 3.988,
+      "mean_latency_s": 3.99,
+      "completion_tokens": 266,
+      "aggregate_tok_s": 66.7,
+      "clocks_after": {
+        "spark-1": "2496 MHz, 3003 MHz, 57",
+        "spark-2": "2470 MHz, 3003 MHz, 53"
+      },
+      "requests": [
+        {
+          "ok": true,
+          "seconds": 3.987,
+          "prompt_tokens": 27,
+          "completion_tokens": 266,
+          "text_chars": 1076
+        }
+      ]
+    },
+    {
+      "concurrency": 3,
+      "wall_s": 5.709,
+      "mean_latency_s": 5.66,
+      "completion_tokens": 900,
+      "aggregate_tok_s": 157.6,
+      "clocks_after": {
+        "spark-1": "2457 MHz, 3003 MHz, 56",
+        "spark-2": "2424 MHz, 3003 MHz, 54"
+      },
+      "requests": [
+        {
+          "ok": true,
+          "seconds": 5.559,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1051
+        },
+        {
+          "ok": true,
+          "seconds": 5.708,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1050
+        },
+        {
+          "ok": true,
+          "seconds": 5.708,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1051
+        }
+      ]
+    },
+    {
+      "concurrency": 6,
+      "wall_s": 7.64,
+      "mean_latency_s": 7.33,
+      "completion_tokens": 1730,
+      "aggregate_tok_s": 226.4,
+      "clocks_after": {
+        "spark-1": "2509 MHz, 3003 MHz, 61",
+        "spark-2": "2535 MHz, 3003 MHz, 57"
+      },
+      "requests": [
+        {
+          "ok": true,
+          "seconds": 6.714,
+          "prompt_tokens": 27,
+          "completion_tokens": 264,
+          "text_chars": 1078
+        },
+        {
+          "ok": true,
+          "seconds": 7.19,
+          "prompt_tokens": 27,
+          "completion_tokens": 266,
+          "text_chars": 1081
+        },
+        {
+          "ok": true,
+          "seconds": 7.341,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1050
+        },
+        {
+          "ok": true,
+          "seconds": 7.546,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1081
+        },
+        {
+          "ok": true,
+          "seconds": 7.545,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1050
+        },
+        {
+          "ok": true,
+          "seconds": 7.637,
+          "prompt_tokens": 27,
+          "completion_tokens": 300,
+          "text_chars": 1067
+        }
+      ]
+    }
+  ],
+  "note": "short-prompt concurrency curve; every row carries per-request usage"
+}

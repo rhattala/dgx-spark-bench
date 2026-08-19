@@ -121,21 +121,29 @@ a single run can land three points either side on luck alone. That, rather than 
 the average, is the reason to fix it.
 
 
-## What it costs (measured, not estimated)
+## What it costs (measured, 4 runs)
 
-End-to-end best-of-3 on short outputs (~1k chars), 2× DGX Spark GB10:
+End-to-end best-of-3 on short outputs, 2× DGX Spark GB10. Prompt: a 119-char coding question,
+`max_tokens=300`, `temperature=0.7`, clocks 2405/3003 MHz at ~40 °C.
+Raw per-request data: [`results/2026-08-18/verify-cost*.json`](../results/2026-08-18/).
 
-| stage | time |
-|---|---|
-| generate 3 candidates **in parallel** | 6.5 s |
-| verify — 12 scoring calls at c=12 | 34.9 s |
-| **total** | **41.4 s** |
-| a single unverified answer | 4.1 s |
+| concurrency | aggregate | mean latency |
+|---|---|---|
+| 1 | 70 tok/s (67–72, sd 2) | 4.1 s |
+| 3 | 160 tok/s (142–185, sd 16) | 5.5 s |
+| 6 | **237 tok/s** (226–256, sd 12) | 7.2 s |
 
-**Overhead is ~37 s.** Generating N candidates is nearly free if you do it in parallel — the
-cost is the verifier's own analysis generations, not the extra samples.
+**3.4× the throughput for ~75% more latency.** Generating N candidates in parallel is therefore
+cheap — 3 candidates cost ~5.5 s, not 3 × 4.1 s.
 
-On long agent traces (~95k tokens) it is ~21 min/task at K=1. So: a deliberate
+Verification itself measured at ~35 s for 12 scoring calls at c=12, giving roughly **41 s
+end-to-end** against ~4 s for a single unverified answer.
+
+⚠️ Run-to-run spread is large — the c=3 figure ranged 142–185 tok/s across four runs. An earlier
+version of this table quoted single-run numbers (73/142/268); the 268 was the top of the range,
+not the centre. **Do not quote a single run of this.**
+
+On long agent traces (~95k tokens) verification is ~21 min/task at K=1: a deliberate
 "do this properly" invocation, or an overnight batch. Not every turn.
 
 ## Configuration — WITHDRAWN pending honest re-measurement

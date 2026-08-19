@@ -390,6 +390,12 @@ nodes have the **same** topology:
 | spark-1 | 0, 2, 4, 5 | +41.9 °C |
 | spark-2 | 0, 2, 4, 5 | +39.1 °C |
 
+*Window: per-zone **median** of 924 samples at GPU utilisation >80%, minus the median of 38
+samples at <5%, from `results/2026-08-18/telemetry.jsonl`. Using means instead gives +40.0 /
++36.6 — the classification is unchanged under either, since zone 2 clears the distant family
+(+30.9 / +29.2) by more than 7 °C on every definition. Stating the window matters: the claim
+this retracts died precisely because its window was one 90-second burst.*
+
 Zone 2 simply warms more slowly on spark-2; a short probe caught it mid-transient. The error is
 the same one that produced an earlier retracted claim that one node ran 5 °C hotter — **a single
 measurement generalised into a property.**
@@ -398,8 +404,10 @@ What does survive, and is worth keeping:
 
 * All 7 zones report the type string `acpitz` with **no labels**, so they cannot be named from
   the system — only classified by behaviour.
-* **CPU-only load raises every zone within ~1.5 °C of every other**: there is no CPU-specific
-  rail. Confirmed on both nodes.
+* **CPU-only load raises every zone within ~1.5 °C of every other**: no CPU-specific rail.
+  ⚠️ Provenance: a **single 70 s spin-load probe, unreplicated** — the run telemetry is
+  GPU-dominated and cannot check it. Held to a lower standard than the GPU classification above,
+  and flagged as such rather than described as confirmed.
 * **GPU load separates them into two families ~9.5 °C apart** — measured from 924 hot vs 38 idle
   samples per node: GPU-adjacent {0,2,4,5} mean +40.6/+38.5, distant {1,3,6} mean +30.9/+29.2.
 * Monitoring should read `max()` across all zones rather than trusting any index — which is what

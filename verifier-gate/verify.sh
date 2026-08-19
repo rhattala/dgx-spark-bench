@@ -3,8 +3,10 @@
 #
 #   ./verify.sh /path/to/llm-as-a-verifier
 #
-# Uses the recommended config (K=1, all three criteria): same accuracy as K=2 at
-# half the compute, measured over 40 ring shufflings.
+# Defaults to K=1 with all three criteria. K=1 performed the same as K=2 under
+# every reconstruction we tried; the earlier '40 shuffling' ablation that also
+# claimed a single criterion was worse has been WITHDRAWN (it fabricated 20.8%
+# of its inputs). See verifier-gate/README.md.
 set -uo pipefail
 REPO="${1:-.}"
 WORKERS="${WORKERS:-4}"
